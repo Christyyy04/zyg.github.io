@@ -5,346 +5,523 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>🧋 奶茶打卡</title>
 <style>
-  :root {
-    --primary: #c8a27a;
-    --primary-dark: #b0885e;
-    --primary-light: #f0e4d4;
-    --bg: #faf7f2;
-    --card-bg: #ffffff;
-    --text: #4a3728;
-    --text-secondary: #a0937d;
-    --text-muted: #c5b8a8;
-    --border: #efe8dc;
-    --danger: #d4786e;
-    --danger-light: #fdf0ee;
-    --shadow: 0 2px 12px rgba(74,55,40,.06);
-    --radius: 16px;
-    --radius-sm: 10px;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100dvh;
-    display: flex;
-    justify-content: center;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-font-smoothing: antialiased;
-  }
-  .app {
-    width: 100%;
-    max-width: 480px;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    padding-bottom: 120px;
-  }
+/* ============================================================
+   CSS Variables & Reset — Macaron Color Scheme
+   ============================================================ */
+:root {
+  --primary: #f0a8b8;
+  --primary-dark: #e8909f;
+  --primary-light: #fce4ec;
+  --bg: #fdf6f8;
+  --card-bg: #ffffff;
+  --text: #5d4e5f;
+  --text-secondary: #9b8ea0;
+  --text-muted: #c8bcc8;
+  --border: #f2e6ec;
+  --danger: #e8939e;
+  --danger-light: #fef0f2;
+  --success: #8cc7b5;
+  --shadow: 0 2px 12px rgba(180,140,160,.08);
+  --shadow-sm: 0 1px 4px rgba(180,140,160,.05);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --max-width: 480px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* ===== 页面容器 ===== */
-  .page { display: none; flex-direction: column; padding: 20px 16px; gap: 16px; }
-  .page.active { display: flex; }
+  /* Macaron accent colors */
+  --mac-pink: #f8c4d0;
+  --mac-mint: #b8e0d2;
+  --mac-peach: #ffd9c0;
+  --mac-lavender: #d5c6e8;
+  --mac-yellow: #fde8b0;
+  --mac-blue: #b8d8f0;
+  --mac-rose: #f5c4d0;
+  --mac-green: #c1e8d5;
+  --mac-coral: #fcc8b8;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
 
-  /* ===== 顶部导航 ===== */
-  .nav-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    gap: 12px;
-  }
-  .nav-arrow {
-    width: 40px; height: 40px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; color: var(--primary); font-weight: 300;
-    border-radius: 50%; background: var(--card-bg); cursor: pointer;
-    box-shadow: var(--shadow); user-select: none;
-  }
-  .nav-arrow:active { background: var(--primary-light); }
-  .month-title { font-size: 18px; font-weight: 600; letter-spacing: 1px; }
-  .stats-link {
-    display: flex; align-items: center; gap: 4px;
-    padding: 10px 16px; background: var(--card-bg); border-radius: 30px;
-    cursor: pointer; font-size: 13px; color: var(--text-secondary);
-    box-shadow: var(--shadow); white-space: nowrap;
-  }
-  .stats-link:active { background: var(--primary-light); }
+/* ============================================================
+   App Shell
+   ============================================================ */
+.app {
+  width: 100%;
+  max-width: var(--max-width);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.page { display: none; flex-direction: column; padding: 16px; gap: 14px; padding-bottom: 120px; }
+.page.active { display: flex; }
 
-  /* ===== 卡片 ===== */
-  .card {
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 16px;
-    overflow: hidden;
-  }
-  .section-title {
-    font-size: 16px; font-weight: 600; margin-bottom: 12px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .section-title::before {
-    content: ''; width: 4px; height: 18px;
-    background: var(--primary); border-radius: 2px;
-  }
+/* ============================================================
+   Login Page
+   ============================================================ */
+.login-brand {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48px 0 28px; gap: 4px;
+}
+.login-logo { font-size: 64px; animation: bounce 2s infinite; }
+@keyframes bounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.login-title { font-size: 26px; font-weight: 700; letter-spacing: 2px; color: var(--text); }
+.login-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.login-card { padding: 20px; }
+.login-card .field { border-bottom: none; padding: 10px 0; display: flex; flex-direction: column; gap: 10px; }
+.field-label { font-size: 14px; font-weight: 500; }
+.login-input {
+  width: 100%; height: 48px; background: var(--bg); border: none;
+  border-radius: 10px; padding: 0 16px; font-size: 16px; color: var(--text);
+  outline: none; font-family: inherit; text-align: center;
+  transition: box-shadow .2s;
+}
+.login-input:focus { box-shadow: 0 0 0 2px rgba(240,168,184,.3); }
+.login-input::placeholder { color: var(--text-muted); }
+.login-error {
+  text-align: center; font-size: 13px; color: var(--danger);
+  min-height: 20px; margin-top: 6px; transition: .2s;
+}
+.login-btns { display: flex; gap: 10px; margin-top: 6px; }
+.login-btn {
+  flex: 1; padding: 14px 0; border-radius: 12px; font-size: 15px;
+  font-weight: 600; cursor: pointer; text-align: center; border: none;
+  font-family: inherit; transition: .15s;
+}
+.login-btn-primary { background: var(--primary); color: #fff; }
+.login-btn-primary:active { background: var(--primary-dark); }
+.login-btn-outline { background: var(--card-bg); color: var(--primary); border: 1.5px solid var(--primary); }
+.login-btn-outline:active { background: var(--primary-light); }
+.login-tip {
+  text-align: center; font-size: 12px; color: var(--text-muted);
+  margin-top: 16px; line-height: 1.8;
+}
 
-  /* ===== 日历 ===== */
-  .weekday-row { display: flex; margin-bottom: 4px; }
-  .weekday {
-    flex: 1; text-align: center; font-size: 12px;
-    color: var(--text-secondary); font-weight: 500; padding: 6px 0;
-  }
-  .day-grid { display: flex; flex-wrap: wrap; }
-  .day-cell {
-    width: calc(100% / 7); aspect-ratio: 1;
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: flex-start; padding: 4px 3px; position: relative;
-    border-radius: 8px; cursor: pointer; transition: .15s; font-size: 13px; gap: 2px;
-  }
-  .day-cell.muted { opacity: .25; pointer-events: none; }
-  .day-cell.today { background: var(--primary-light); font-weight: 700; }
-  .day-cell.selectable { border: 2px dashed var(--danger); }
-  .day-cell.selected { background: var(--danger-light); border-color: var(--danger); }
-  .day-photo {
-    width: 36px; height: 36px; border-radius: 6px; object-fit: cover;
-  }
-  .day-badge {
-    position: absolute; top: 2px; right: 2px;
-    background: var(--primary); color: #fff; font-size: 10px; border-radius: 50%;
-    min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
-  }
-  .day-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+/* ============================================================
+   Navigation & Header
+   ============================================================ */
+.acct-entry { display: flex; align-items: center; justify-content: flex-end; padding: 0 0 2px; }
+.acct-pill {
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 14px; background: var(--card-bg); border-radius: 20px;
+  cursor: pointer; font-size: 12px; color: var(--text-secondary);
+  box-shadow: var(--shadow); transition: .15s;
+}
+.acct-pill:active { background: var(--primary-light); }
+.acct-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
 
-  /* ===== 本月数据 ===== */
-  .stats-row {
-    display: flex; align-items: center; justify-content: space-around; padding: 12px 0 10px;
-  }
-  .stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .stat-num { font-size: 32px; font-weight: 700; color: var(--primary); }
-  .stat-label { font-size: 12px; color: var(--text-secondary); }
-  .stat-divider { width: 1px; height: 40px; background: var(--border); }
-  .photo-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 8px 0; -webkit-overflow-scrolling: touch; }
-  .photo-scroll::-webkit-scrollbar { display: none; }
-  .thumb-img { width: 80px; height: 80px; border-radius: 8px; flex-shrink: 0; object-fit: cover; }
-  .empty-note { text-align: center; color: var(--text-muted); font-size: 13px; padding: 16px 0 4px; }
+/* Nav bar — centered month title between arrows */
+.nav-bar {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px auto;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+}
+.nav-arrow {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; color: var(--primary); font-weight: 300;
+  border-radius: 50%; background: var(--card-bg); cursor: pointer;
+  box-shadow: var(--shadow); transition: .15s;
+}
+.nav-arrow:active { background: var(--primary-light); }
+.month-title {
+  font-size: 17px; font-weight: 600; letter-spacing: 1px; white-space: nowrap;
+  text-align: center; cursor: pointer; padding: 8px 4px; border-radius: 8px;
+  transition: .15s; color: var(--text);
+}
+.month-title:hover { background: var(--primary-light); }
+.month-title:active { background: var(--primary-light); }
+.month-title::after {
+  content: ' ▾';
+  font-size: 11px; color: var(--text-muted);
+}
+.stats-link {
+  display: flex; align-items: center; gap: 4px;
+  padding: 10px 12px; background: var(--card-bg); border-radius: 30px;
+  cursor: pointer; font-size: 13px; color: var(--text-secondary);
+  box-shadow: var(--shadow); white-space: nowrap; transition: .15s;
+}
+.stats-link:active { background: var(--primary-light); }
 
-  /* ===== 最爱 ===== */
-  .fav-row { display: flex; align-items: center; gap: 16px; }
-  .fav-photo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-  .fav-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; }
-  .fav-name { font-size: 17px; font-weight: 600; }
-  .fav-count { font-size: 13px; color: var(--text-secondary); margin-top: 2px; display: block; }
+/* Page header (add / stats pages) */
+.page-header { display: flex; align-items: center; gap: 12px; }
+.page-header .back-btn { font-size: 20px; padding: 8px; cursor: pointer; color: var(--text-secondary); border-radius: 50%; transition: .15s; }
+.page-header .back-btn:active { background: var(--primary-light); }
+.page-header h2 { font-size: 18px; font-weight: 600; }
 
-  /* ===== 筛选提示 ===== */
-  .filter-tip {
-    display: flex; justify-content: space-between; margin-top: 10px;
-    padding: 8px 12px; background: var(--primary-light); border-radius: 8px;
-    font-size: 13px; color: var(--primary-dark);
-  }
-  .filter-clear { cursor: pointer; font-weight: 600; padding: 2px 8px; }
+/* ============================================================
+   Month Picker Overlay
+   ============================================================ */
+.month-picker-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 210;
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn .2s;
+}
+.month-picker-overlay.hidden { display: none; }
+.month-picker-box {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 20px; width: calc(100% - 40px); max-width: 380px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.12);
+  animation: slideUp .25s;
+}
+.mp-year-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; margin-bottom: 16px;
+}
+.mp-year-btn {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: var(--primary); cursor: pointer;
+  border-radius: 50%; background: var(--bg); font-weight: 300; transition: .15s;
+}
+.mp-year-btn:active { background: var(--primary-light); }
+.mp-year-label { font-size: 18px; font-weight: 700; min-width: 80px; text-align: center; }
+.mp-month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.mp-month-cell {
+  padding: 12px 4px; text-align: center; border-radius: 10px;
+  cursor: pointer; font-size: 14px; font-weight: 500;
+  color: var(--text-secondary); background: var(--bg);
+  transition: .15s;
+}
+.mp-month-cell:active { background: var(--primary-light); color: var(--primary-dark); }
+.mp-month-cell.current { background: var(--primary-light); color: var(--primary-dark); font-weight: 700; }
+.mp-month-cell.today-month { border: 2px solid var(--primary); }
+.mp-actions { display: flex; gap: 10px; margin-top: 16px; }
+.mp-btn {
+  flex: 1; padding: 12px; border-radius: 10px; font-size: 14px;
+  font-weight: 600; cursor: pointer; text-align: center; border: none;
+  font-family: inherit; transition: .15s;
+}
+.mp-btn-cancel { background: var(--bg); color: var(--text-secondary); }
+.mp-btn-cancel:active { background: var(--border); }
+.mp-btn-today { background: var(--primary); color: #fff; }
+.mp-btn-today:active { background: var(--primary-dark); }
 
-  /* ===== 底部操作栏 ===== */
-  .bottom-bar {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 480px;
-    display: flex; gap: 10px; padding: 12px 16px;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-    background: var(--card-bg); box-shadow: 0 -2px 16px rgba(74,55,40,.06); z-index: 100;
-  }
-  .bbtn {
-    flex: 1; font-size: 14px; font-weight: 500; border-radius: 12px;
-    padding: 14px 6px; text-align: center; border: none; cursor: pointer;
-    transition: .15s; white-space: nowrap;
-  }
-  .bbtn-primary { background: var(--primary); color: #fff; }
-  .bbtn-primary:active { background: var(--primary-dark); }
-  .bbtn-outline { background: var(--card-bg); color: var(--text); border: 1.5px solid var(--border); }
-  .bbtn-outline:active { background: var(--bg); }
-  .bbtn-cancel { background: var(--bg); color: var(--text-secondary); flex: 1; }
-  .bbtn-danger { background: var(--danger); color: #fff; flex: 2; }
-  .delete-hint { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--danger); font-weight: 500; }
+/* ============================================================
+   Cards
+   ============================================================ */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  overflow: visible;
+}
+.section-title {
+  font-size: 15px; font-weight: 600; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title::before {
+  content: ''; width: 4px; height: 18px;
+  background: var(--primary); border-radius: 2px;
+}
 
-  /* ===== Add 页面表单 ===== */
-  .add-header { display: flex; align-items: center; gap: 12px; }
-  .add-header .back-btn { font-size: 20px; padding: 8px; cursor: pointer; color: var(--text-secondary); }
-  .add-header h2 { font-size: 18px; font-weight: 600; }
-  .field { padding: 14px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-  .field:last-child { border-bottom: none; }
-  .field-label { font-size: 14px; font-weight: 500; }
-  .field input, .field select {
-    width: 100%; height: 44px; background: var(--bg); border: none;
-    border-radius: 8px; padding: 0 14px; font-size: 15px; color: var(--text);
-    outline: none; font-family: inherit;
-  }
-  .field input:focus { box-shadow: 0 0 0 2px rgba(200,162,122,.2); }
-  .field select { appearance: none; cursor: pointer; }
-  .photo-upload {
-    width: 100%; height: 160px; background: var(--bg);
-    border: 2px dashed var(--border); border-radius: 12px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 6px; cursor: pointer; transition: .15s;
-  }
-  .photo-upload:hover { border-color: var(--primary); }
-  .upload-icon { font-size: 36px; color: var(--primary); }
-  .upload-text { font-size: 13px; color: var(--text-secondary); }
-  .photo-preview-wrap { position: relative; border-radius: 12px; overflow: hidden; }
-  .photo-preview-wrap img { width: 100%; max-height: 280px; object-fit: cover; display: block; }
-  .photo-remove {
-    position: absolute; top: 8px; right: 8px;
-    width: 36px; height: 36px; background: rgba(0,0,0,.5); color: #fff;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; font-size: 16px;
-  }
-  .submit-btn {
-    width: 100%; padding: 16px; background: var(--primary); color: #fff;
-    border: none; border-radius: 12px; font-size: 17px; font-weight: 600;
-    cursor: pointer; letter-spacing: 2px; transition: .15s;
-  }
-  .submit-btn:active { background: var(--primary-dark); }
+/* ============================================================
+   Calendar
+   ============================================================ */
+.weekday-row { display: flex; margin-bottom: 4px; }
+.weekday {
+  flex: 1; text-align: center; font-size: 12px;
+  color: var(--text-secondary); font-weight: 500; padding: 6px 0;
+}
+.day-grid { display: flex; flex-wrap: wrap; }
+.day-cell {
+  width: calc(100% / 7); aspect-ratio: 1;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-start; padding: 3px 2px; position: relative;
+  border-radius: 8px; cursor: pointer; transition: .15s; font-size: 13px; gap: 1px;
+}
+.day-cell.muted { opacity: .25; pointer-events: none; }
+.day-cell.today { background: var(--primary-light); font-weight: 700; }
+.day-cell.selectable { border: 2px dashed var(--danger); }
+.day-cell.selected { background: var(--danger-light); border-color: var(--danger); }
+.day-cell.has-photo { font-weight: 600; }
+.day-photo {
+  width: 34px; height: 34px; border-radius: 6px; object-fit: cover;
+}
+.day-badge {
+  position: absolute; top: 2px; right: 2px;
+  background: var(--primary); color: #fff; font-size: 10px; border-radius: 50%;
+  min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+  font-weight: 600;
+}
+.day-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+.filter-tip {
+  display: flex; justify-content: space-between; margin-top: 10px;
+  padding: 8px 12px; background: var(--primary-light); border-radius: 8px;
+  font-size: 13px; color: var(--primary-dark);
+}
+.filter-clear { cursor: pointer; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+.filter-clear:active { background: rgba(0,0,0,.05); }
 
-  /* ===== Stats 页面 ===== */
-  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .filter-chip {
-    padding: 10px 16px; background: var(--card-bg); border: 1px solid var(--border);
-    border-radius: 20px; font-size: 13px; cursor: pointer; color: var(--text-secondary);
-    box-shadow: var(--shadow);
-  }
-  .filter-chip.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); font-weight: 500; }
-  .filter-clear-btn { font-size: 13px; color: var(--danger); cursor: pointer; padding: 8px 12px; }
-  .pie-wrap { display: flex; justify-content: center; padding: 16px 0; }
-  .pie-wrap canvas { max-width: 100%; }
-  .store-row {
-    display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border);
-    cursor: pointer;
-  }
-  .store-row:last-child { border-bottom: none; }
-  .store-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-  .store-name { width: 120px; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
-  .store-bar-wrap { flex: 1; height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; }
-  .store-bar { height: 100%; background: var(--primary); border-radius: 5px; transition: width .4s; }
-  .store-stat { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+/* ============================================================
+   Month Stats
+   ============================================================ */
+.stats-row {
+  display: flex; align-items: center; justify-content: space-around; padding: 10px 0 8px;
+}
+.stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stat-num { font-size: 32px; font-weight: 700; color: var(--primary); }
+.stat-label { font-size: 12px; color: var(--text-secondary); }
+.stat-divider { width: 1px; height: 40px; background: var(--border); }
+.photo-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 6px 0 2px; scroll-behavior: smooth; }
+.photo-scroll::-webkit-scrollbar { display: none; }
+.thumb-img {
+  width: 72px; height: 72px; border-radius: 8px; flex-shrink: 0; object-fit: cover;
+  cursor: pointer; transition: transform .15s;
+}
+.thumb-img:active { transform: scale(.95); }
+.empty-note { text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px 0 2px; }
 
-  /* ===== 底部 Tab 切换 ===== */
-  .tab-bar {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 480px;
-    display: flex; background: var(--card-bg);
-    box-shadow: 0 -2px 16px rgba(74,55,40,.06); z-index: 99;
-  }
-  .tab-item {
-    flex: 1; text-align: center; padding: 10px 0 6px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-    cursor: pointer; font-size: 12px; color: var(--text-secondary);
-    transition: .15s;
-  }
-  .tab-item.active { color: var(--primary); font-weight: 600; }
-  .tab-item .tab-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+/* ============================================================
+   Favorite
+   ============================================================ */
+.fav-row { display: flex; align-items: center; gap: 16px; }
+.fav-photo { width: 68px; height: 68px; border-radius: 50%; object-fit: cover; flex-shrink: 0; cursor: pointer; }
+.fav-icon { width: 68px; height: 68px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0; }
+.fav-name { font-size: 17px; font-weight: 600; display: block; }
+.fav-count { font-size: 13px; color: var(--text-secondary); margin-top: 2px; display: block; }
 
-  /* bottom bar visibility when tab bar present */
-  .has-tabbar .bottom-bar { bottom: 56px; }
+/* ============================================================
+   Add Record Form
+   ============================================================ */
+.field { padding: 14px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; position: relative; }
+.field:last-child { border-bottom: none; }
+.field input, .field select {
+  width: 100%; height: 44px; background: var(--bg); border: none;
+  border-radius: 8px; padding: 0 14px; font-size: 15px; color: var(--text);
+  outline: none; font-family: inherit; transition: box-shadow .2s;
+}
+.field input:focus, .field select:focus { box-shadow: 0 0 0 2px rgba(240,168,184,.3); }
+.field select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239b8ea0' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
 
-  /* ===== 弹窗 ===== */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .modal-overlay.hidden { display: none; }
-  .modal-box {
-    background: var(--card-bg); border-radius: var(--radius);
-    padding: 24px 20px 20px; width: calc(100% - 48px); max-width: 340px;
-    box-shadow: 0 8px 40px rgba(0,0,0,.15);
-  }
-  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 10px; text-align: center; }
-  .modal-body { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; text-align: center; line-height: 1.7; white-space: pre-line; }
-  .modal-btns { display: flex; gap: 10px; }
-  .modal-btn { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; border: none; font-family: inherit; transition: .15s; }
-  .modal-btn-cancel { background: var(--bg); color: var(--text-secondary); }
-  .modal-btn-cancel:active { background: var(--border); }
-  .modal-btn-confirm { background: var(--primary); color: #fff; }
-  .modal-btn-confirm:active { background: var(--primary-dark); }
-  .modal-btn-danger { background: var(--danger); color: #fff; }
-  .modal-btn-danger:active { opacity: .85; }
+/* Autocomplete dropdown */
+.suggest-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.08); z-index: 50;
+  max-height: 180px; overflow-y: auto; display: none;
+}
+.suggest-dropdown.show { display: block; }
+.suggest-item {
+  padding: 12px 14px; cursor: pointer; font-size: 14px; color: var(--text);
+  border-bottom: 1px solid var(--border); transition: .1s;
+}
+.suggest-item:last-child { border-bottom: none; }
+.suggest-item:active, .suggest-item:hover { background: var(--primary-light); }
 
-  /* ===== Action Sheet ===== */
-  .sheet-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200;
-    display: flex; align-items: flex-end; justify-content: center;
-  }
-  .sheet-overlay.hidden { display: none; }
-  .sheet-box {
-    width: 100%; max-width: 480px; background: var(--card-bg);
-    border-radius: 16px 16px 0 0; padding: 8px 0 0;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  }
-  .sheet-item {
-    padding: 16px; text-align: center; font-size: 16px;
-    border-bottom: 1px solid var(--border); cursor: pointer; transition: .15s;
-  }
-  .sheet-item:last-child { border-bottom: none; }
-  .sheet-item:active { background: var(--bg); }
-  .sheet-item.danger { color: var(--danger); font-weight: 600; }
+/* History photos strip */
+.history-photos { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; }
+.history-photos::-webkit-scrollbar { display: none; }
+.history-photo-thumb {
+  width: 56px; height: 56px; border-radius: 8px; flex-shrink: 0;
+  object-fit: cover; cursor: pointer; border: 2px solid transparent;
+  transition: .15s;
+}
+.history-photo-thumb:active { transform: scale(.95); }
+.history-photo-thumb.selected { border-color: var(--primary); }
 
-  /* ===== Toast ===== */
-  .toast {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    background: rgba(0,0,0,.78); color: #fff; padding: 12px 24px;
-    border-radius: 8px; font-size: 14px; z-index: 300; pointer-events: none;
-  }
-  .toast.hidden { display: none; }
+/* Photo upload */
+.photo-upload {
+  width: 100%; height: 150px; background: var(--bg);
+  border: 2px dashed var(--border); border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; cursor: pointer; transition: .15s;
+}
+.photo-upload:hover { border-color: var(--primary); }
+.photo-upload:active { background: var(--primary-light); }
+.upload-icon { font-size: 36px; color: var(--primary); }
+.upload-text { font-size: 13px; color: var(--text-secondary); }
+.upload-hint { font-size: 11px; color: var(--text-muted); }
+.photo-preview-wrap { position: relative; border-radius: 12px; overflow: hidden; }
+.photo-preview-wrap img { width: 100%; max-height: 260px; object-fit: cover; display: block; }
+.photo-remove {
+  position: absolute; top: 8px; right: 8px;
+  width: 36px; height: 36px; background: rgba(0,0,0,.5); color: #fff;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px; transition: .15s;
+}
+.photo-remove:active { background: rgba(0,0,0,.7); }
+.submit-btn {
+  width: 100%; padding: 16px; background: var(--primary); color: #fff;
+  border: none; border-radius: 12px; font-size: 17px; font-weight: 600;
+  cursor: pointer; letter-spacing: 2px; transition: .15s; font-family: inherit;
+}
+.submit-btn:active { background: var(--primary-dark); }
+.submit-btn:disabled { opacity: .5; pointer-events: none; }
 
-  /* ===== 账号：登录页 ===== */
-  .login-brand {
-    display: flex; flex-direction: column; align-items: center;
-    padding: 56px 0 36px; gap: 6px;
-  }
-  .login-logo { font-size: 64px; }
-  .login-title { font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: 2px; }
-  .login-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-  .login-card { padding: 24px 20px; }
-  .login-card .field { border-bottom: none; }
-  .login-input {
-    width: 100%; height: 48px; background: var(--bg); border: none;
-    border-radius: 10px; padding: 0 16px; font-size: 16px; color: var(--text);
-    outline: none; font-family: inherit; text-align: center;
-  }
-  .login-input:focus { box-shadow: 0 0 0 2px rgba(200,162,122,.25); }
-  .login-input::placeholder { color: var(--text-muted); }
-  .login-error {
-    text-align: center; font-size: 13px; color: var(--danger);
-    min-height: 20px; margin-top: 8px; transition: .2s;
-  }
-  .login-btns { display: flex; gap: 10px; margin-top: 8px; }
-  .login-btn {
-    flex: 1; padding: 14px 0; border-radius: 12px; font-size: 15px;
-    font-weight: 600; cursor: pointer; text-align: center; border: none;
-    font-family: inherit; transition: .15s;
-  }
-  .login-btn-login { background: var(--primary); color: #fff; }
-  .login-btn-login:active { background: var(--primary-dark); }
-  .login-btn-register { background: var(--card-bg); color: var(--primary); border: 1.5px solid var(--primary); }
-  .login-btn-register:active { background: var(--primary-light); }
-  .login-tip {
-    text-align: center; font-size: 12px; color: var(--text-muted);
-    margin-top: 18px; line-height: 1.6;
-  }
+/* ============================================================
+   Stats Page
+   ============================================================ */
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filter-chip {
+  padding: 10px 16px; background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 20px; font-size: 13px; cursor: pointer; color: var(--text-secondary);
+  box-shadow: var(--shadow); transition: .15s;
+}
+.filter-chip:active { background: var(--primary-light); }
+.filter-chip.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); font-weight: 500; }
+.filter-clear-btn { font-size: 13px; color: var(--danger); cursor: pointer; padding: 8px 12px; border-radius: 8px; }
+.filter-clear-btn:active { background: var(--danger-light); }
+.filter-clear-btn.hidden { display: none; }
+.pie-wrap { display: flex; justify-content: center; padding: 8px 0; }
+.pie-wrap canvas { max-width: 100%; }
+.stats-total { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+.store-row {
+  display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: .15s;
+}
+.store-row:active { background: var(--bg); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+.store-row:last-child { border-bottom: none; }
+.store-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.store-name { width: 110px; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+.store-bar-wrap { flex: 1; height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; }
+.store-bar { height: 100%; background: var(--primary); border-radius: 5px; transition: width .5s ease; }
+.store-stat { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
 
-  /* ===== 账号：入口按钮（日历页顶栏） ===== */
-  .acct-entry {
-    display: flex; align-items: center; justify-content: flex-end; padding: 0 0 2px;
-  }
-  .acct-pill {
-    display: flex; align-items: center; gap: 4px;
-    padding: 6px 14px; background: var(--card-bg); border-radius: 20px;
-    cursor: pointer; font-size: 12px; color: var(--text-secondary);
-    box-shadow: var(--shadow); user-select: none;
-  }
-  .acct-pill:active { background: var(--primary-light); }
-  .acct-pill .acct-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+/* ============================================================
+   Bottom Tab Bar
+   ============================================================ */
+.tab-bar {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: var(--max-width);
+  display: flex; background: var(--card-bg);
+  box-shadow: 0 -2px 16px rgba(180,140,160,.06); z-index: 99;
+}
+.tab-item {
+  flex: 1; text-align: center; padding: 8px 0 4px;
+  padding-bottom: calc(8px + var(--safe-bottom));
+  cursor: pointer; font-size: 12px; color: var(--text-secondary);
+  transition: .15s;
+}
+.tab-item.active { color: var(--primary); font-weight: 600; }
+.tab-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+
+/* ============================================================
+   Bottom Action Bar (calendar page)
+   ============================================================ */
+.bottom-bar {
+  position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: var(--max-width);
+  display: flex; gap: 10px; padding: 10px 16px;
+  padding-bottom: calc(10px + var(--safe-bottom));
+  background: var(--card-bg); box-shadow: 0 -2px 16px rgba(180,140,160,.06); z-index: 98;
+}
+.bbtn {
+  flex: 1; font-size: 14px; font-weight: 500; border-radius: 12px;
+  padding: 14px 6px; text-align: center; border: none; cursor: pointer;
+  transition: .15s; white-space: nowrap; font-family: inherit;
+}
+.bbtn-primary { background: var(--primary); color: #fff; }
+.bbtn-primary:active { background: var(--primary-dark); }
+.bbtn-outline { background: var(--card-bg); color: var(--text); border: 1.5px solid var(--border); }
+.bbtn-outline:active { background: var(--bg); }
+.bbtn-cancel { background: var(--bg); color: var(--text-secondary); flex: 1; }
+.bbtn-danger { background: var(--danger); color: #fff; flex: 2; }
+.bbtn-danger:active { opacity: .85; }
+.delete-hint { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--danger); font-weight: 500; }
+
+/* ============================================================
+   Modal
+   ============================================================ */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn .2s;
+}
+.modal-overlay.hidden { display: none; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-box {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 24px 20px 20px; width: calc(100% - 48px); max-width: 340px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.15);
+  animation: slideUp .25s;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 10px; text-align: center; }
+.modal-body { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; text-align: center; line-height: 1.7; white-space: pre-line; }
+.modal-btns { display: flex; gap: 10px; }
+.modal-btn { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; border: none; font-family: inherit; transition: .15s; }
+.modal-btn-cancel { background: var(--bg); color: var(--text-secondary); }
+.modal-btn-cancel:active { background: var(--border); }
+.modal-btn-confirm { background: var(--primary); color: #fff; }
+.modal-btn-confirm:active { background: var(--primary-dark); }
+.modal-btn-danger { background: var(--danger); color: #fff; }
+.modal-btn-danger:active { opacity: .85; }
+
+/* ============================================================
+   Action Sheet
+   ============================================================ */
+.sheet-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200;
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: fadeIn .2s;
+}
+.sheet-overlay.hidden { display: none; }
+.sheet-box {
+  width: 100%; max-width: var(--max-width); background: var(--card-bg);
+  border-radius: 16px 16px 0 0; padding: 8px 0 0;
+  padding-bottom: calc(16px + var(--safe-bottom));
+  animation: slideUpSheet .25s;
+}
+@keyframes slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet-item {
+  padding: 16px; text-align: center; font-size: 16px;
+  border-bottom: 1px solid var(--border); cursor: pointer; transition: .15s;
+}
+.sheet-item:last-child { border-bottom: none; }
+.sheet-item:active { background: var(--bg); }
+.sheet-item.danger { color: var(--danger); font-weight: 600; }
+
+/* ============================================================
+   Toast
+   ============================================================ */
+.toast {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  background: rgba(93,78,95,.88); color: #fff; padding: 12px 24px;
+  border-radius: 8px; font-size: 14px; z-index: 300; pointer-events: none;
+  transition: opacity .25s; opacity: 1;
+}
+.toast.hidden { opacity: 0; pointer-events: none; }
+
+/* ============================================================
+   Photo Lightbox
+   ============================================================ */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 250;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.lightbox.hidden { display: none; }
+.lightbox img { max-width: 95%; max-height: 90vh; object-fit: contain; border-radius: 8px; }
+
+/* ============================================================
+   Responsive: wider screens
+   ============================================================ */
+@media (min-width: 500px) {
+  .app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+}
 </style>
 </head>
 <body>
-<div class="app has-tabbar">
-  <!-- ========== 页面 0: 登录 / 注册 ========== -->
+<div class="app">
+  <!-- ============================================================
+       PAGE 0: Login / Register
+       ============================================================ -->
   <div class="page active" id="page-login">
     <div class="login-brand">
       <div class="login-logo">🧋</div>
@@ -358,25 +535,27 @@
       </div>
       <div class="login-error" id="loginError"></div>
       <div class="login-btns">
-        <button class="login-btn login-btn-login" onclick="doLogin()">登 录</button>
-        <button class="login-btn login-btn-register" onclick="doRegister()">注册新账号</button>
+        <button class="login-btn login-btn-primary" id="btnLogin">登 录</button>
+        <button class="login-btn login-btn-outline" id="btnRegister">注册新账号</button>
       </div>
     </div>
-    <div class="login-tip">💡 新用户请点击「注册新账号」<br>已有账号请直接「登录」</div>
+    <div class="login-tip">💡 新用户请点击「注册新账号」<br>已有账号请直接「登录」<br><br>📦 数据均保存在浏览器本地</div>
   </div>
 
-  <!-- ========== 页面 1: 日历首页 ========== -->
+  <!-- ============================================================
+       PAGE 1: Calendar Home
+       ============================================================ -->
   <div class="page" id="page-calendar">
     <div class="acct-entry">
-      <div class="acct-pill" onclick="showAccountSheet()">
+      <div class="acct-pill" id="acctPill">
         <span class="acct-dot"></span><span id="acctName">--</span>
       </div>
     </div>
     <div class="nav-bar">
-      <div class="nav-arrow" onclick="prevMonth()">‹</div>
+      <div class="nav-arrow" id="btnPrevMonth">‹</div>
       <div class="month-title" id="monthTitle">2026 年 6 月</div>
-      <div class="nav-arrow" onclick="nextMonth()">›</div>
-      <div class="stats-link" onclick="switchTab('stats')">📊 统计</div>
+      <div class="nav-arrow" id="btnNextMonth">›</div>
+      <div class="stats-link" id="btnGoStats">📊 统计</div>
     </div>
 
     <div class="card">
@@ -384,7 +563,7 @@
       <div class="day-grid" id="dayGrid"></div>
       <div class="filter-tip" id="filterTip" style="display:none">
         <span id="filterTipText"></span>
-        <span class="filter-clear" onclick="clearFilter()">✕</span>
+        <span class="filter-clear" id="btnClearFilter">✕</span>
       </div>
     </div>
 
@@ -408,20 +587,24 @@
     </div>
   </div>
 
-  <!-- ========== 页面 2: 新增打卡 ========== -->
+  <!-- ============================================================
+       PAGE 2: Add Record
+       ============================================================ -->
   <div class="page" id="page-add">
-    <div class="add-header">
-      <span class="back-btn" onclick="switchTab('calendar')">←</span>
+    <div class="page-header">
+      <span class="back-btn" id="btnAddBack">←</span>
       <h2>新增打卡</h2>
     </div>
     <div class="card">
-      <div class="field">
+      <div class="field" id="drinkField">
         <span class="field-label">🧋 饮品名称</span>
-        <input id="addDrink" placeholder="如：珍珠奶茶、杨枝甘露…" maxlength="50">
+        <input id="addDrink" placeholder="如：珍珠奶茶、杨枝甘露…" maxlength="50" autocomplete="off">
+        <div class="suggest-dropdown" id="drinkSuggest"></div>
       </div>
-      <div class="field">
+      <div class="field" id="storeField">
         <span class="field-label">📍 门店名称</span>
-        <input id="addStore" placeholder="如：喜茶·国贸店" maxlength="50">
+        <input id="addStore" placeholder="如：喜茶·国贸店" maxlength="50" autocomplete="off">
+        <div class="suggest-dropdown" id="storeSuggest"></div>
       </div>
       <div class="field">
         <span class="field-label">🍬 糖分选择</span>
@@ -438,8 +621,8 @@
         <select id="addTemp">
           <option value="热">热</option>
           <option value="常温" selected>常温</option>
-          <option value="去冰">去冰</option>
           <option value="少冰">少冰</option>
+          <option value="去冰">去冰</option>
           <option value="全冰">全冰</option>
         </select>
       </div>
@@ -449,36 +632,40 @@
       </div>
       <div class="field">
         <span class="field-label">📸 奶茶实拍</span>
-        <div id="photoUploadArea" class="photo-upload" onclick="choosePhoto()">
+        <div class="history-photos" id="historyPhotos" style="display:none"></div>
+        <div id="photoUploadArea" class="photo-upload">
           <span class="upload-icon">＋</span>
-          <span class="upload-text">拍照或从相册选择</span>
+          <span class="upload-text">点击上传照片</span>
+          <span class="upload-hint">支持拍照或相册选择，也可选下方历史照片</span>
         </div>
         <div id="photoPreviewArea" class="photo-preview-wrap" style="display:none">
           <img id="photoPreviewImg" src="" alt="预览">
-          <span class="photo-remove" onclick="removePhoto()">✕</span>
+          <span class="photo-remove" id="btnRemovePhoto">✕</span>
         </div>
-        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="onPhotoSelected(event)">
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
       </div>
     </div>
-    <button class="submit-btn" onclick="submitRecord()">📝 保存打卡</button>
+    <button class="submit-btn" id="btnSubmit">📝 保存打卡</button>
   </div>
 
-  <!-- ========== 页面 3: 数据统计 ========== -->
+  <!-- ============================================================
+       PAGE 3: Stats
+       ============================================================ -->
   <div class="page" id="page-stats">
-    <div class="add-header">
-      <span class="back-btn" onclick="switchTab('calendar')">←</span>
+    <div class="page-header">
+      <span class="back-btn" id="btnStatsBack">←</span>
       <h2>数据统计</h2>
     </div>
     <div class="filter-bar">
-      <span class="filter-chip" id="chipSugar" onclick="pickFilter('sugar')">糖分 ▽</span>
-      <span class="filter-chip" id="chipTemp" onclick="pickFilter('temp')">温度 ▽</span>
-      <span class="filter-chip" id="chipDrink" onclick="pickFilter('drink')">饮品 ▽</span>
-      <span class="filter-clear-btn" id="filterClearBtn" style="display:none" onclick="clearStatsFilter()">清除</span>
+      <span class="filter-chip" id="chipSugar">糖分 ▽</span>
+      <span class="filter-chip" id="chipTemp">温度 ▽</span>
+      <span class="filter-chip" id="chipDrink">饮品 ▽</span>
+      <span class="filter-clear-btn hidden" id="filterClearBtn">清除</span>
     </div>
 
     <div class="card" id="statsChartCard" style="display:none">
       <div class="section-title">门店占比</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;" id="statsTotal"></div>
+      <div class="stats-total" id="statsTotal"></div>
       <div class="pie-wrap"><canvas id="pieCanvas" width="300" height="300"></canvas></div>
     </div>
     <div class="card" id="statsEmptyCard">
@@ -491,24 +678,46 @@
     </div>
   </div>
 
-  <!-- ========== 底部 Tab 栏 ========== -->
-  <div class="tab-bar" id="tabBar">
-    <div class="tab-item active" data-tab="calendar" onclick="switchTab('calendar')">
+  <!-- ============================================================
+       Bottom Tab Bar
+       ============================================================ -->
+  <div class="tab-bar" id="tabBar" style="display:none">
+    <div class="tab-item active" data-tab="calendar">
       <span class="tab-icon">📅</span>打卡
     </div>
-    <div class="tab-item" data-tab="add" onclick="switchTab('add')">
+    <div class="tab-item" data-tab="add">
       <span class="tab-icon">✚</span>新增
     </div>
-    <div class="tab-item" data-tab="stats" onclick="switchTab('stats')">
+    <div class="tab-item" data-tab="stats">
       <span class="tab-icon">📊</span>统计
     </div>
   </div>
 
-  <!-- ========== 底部操作栏（日历页专用） ========== -->
-  <div class="bottom-bar" id="bottomBar"></div>
+  <!-- Bottom action bar (calendar page only) -->
+  <div class="bottom-bar" id="bottomBar" style="display:none"></div>
 </div>
 
-<!-- ========== 弹窗 ========== -->
+<!-- ============================================================
+     Month Picker Overlay
+     ============================================================ -->
+<div class="month-picker-overlay hidden" id="monthPickerOverlay">
+  <div class="month-picker-box">
+    <div class="mp-year-row">
+      <div class="mp-year-btn" id="mpPrevYear">‹</div>
+      <div class="mp-year-label" id="mpYearLabel">2026</div>
+      <div class="mp-year-btn" id="mpNextYear">›</div>
+    </div>
+    <div class="mp-month-grid" id="mpMonthGrid"></div>
+    <div class="mp-actions">
+      <button class="mp-btn mp-btn-cancel" id="mpBtnCancel">取消</button>
+      <button class="mp-btn mp-btn-today" id="mpBtnToday">回到本月</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     Modal
+     ============================================================ -->
 <div class="modal-overlay hidden" id="modalOverlay">
   <div class="modal-box">
     <div class="modal-title" id="modalTitle"></div>
@@ -517,28 +726,84 @@
   </div>
 </div>
 
-<!-- ========== 底部选择面板 ========== -->
+<!-- ============================================================
+     Action Sheet
+     ============================================================ -->
 <div class="sheet-overlay hidden" id="sheetOverlay">
   <div class="sheet-box" id="sheetBox"></div>
 </div>
 
-<!-- ========== Toast ========== -->
+<!-- ============================================================
+     Photo Lightbox
+     ============================================================ -->
+<div class="lightbox hidden" id="lightbox">
+  <img src="" alt="原图" id="lightboxImg">
+</div>
+
+<!-- ============================================================
+     Toast
+     ============================================================ -->
 <div class="toast hidden" id="toast"></div>
 
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
 <script>
-// ==================== 账号数据层 ====================
-var ACCOUNTS_KEY = 'tea_accounts';
-var SESSION_KEY  = 'tea_session';
-var OLD_DATA_KEY = 'tea_preview_data';
+;(function() {
+'use strict';
 
+// ============================================================
+// CONSTANTS
+// ============================================================
+const ACCOUNTS_KEY  = 'tea_accounts';
+const SESSION_KEY   = 'tea_session';
+const OLD_DATA_KEY  = 'tea_preview_data';
+const WEEKDAYS      = ['一','二','三','四','五','六','日'];
+const SUGARS        = ['无糖','少糖','半糖','七分糖','全糖'];
+const TEMPS         = ['热','常温','少冰','去冰','全冰'];
+const MONTH_NAMES   = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const MAX_PHOTO_WIDTH = 600;
+const PHOTO_QUALITY   = 0.65;
+
+// Expanded Macaron colors for pie chart (30 colors)
+const PIE_COLORS = [
+  '#f8c4d0','#b8e0d2','#ffd9c0','#d5c6e8','#fde8b0','#b8d8f0',
+  '#f5c4d0','#c1e8d5','#fcc8b8','#d0c8f0','#fce4b8','#b0d8e8',
+  '#f0b8c8','#b0dcc8','#ffc8b0','#c8b8e8','#f8dcb0','#a8d0e8',
+  '#e8b8c0','#a8d8c0','#f8c0a8','#c0b0e0','#f0d4a8','#a0c8e0',
+  '#e0b0b8','#a0d0b8','#f0b8a0','#b8a8d8','#e8cca0','#98c0d8'
+];
+
+// ============================================================
+// DOM REFS
+// ============================================================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+// ============================================================
+// STATE
+// ============================================================
+let currentYear, currentMonth;
+let mpYear;                            // month picker year
+let deleteMode   = false;
+let selectedIds  = [];
+let tagFilter    = null;
+let statsFilter  = { sugar: '', temp: '', drink: '' };
+let photoData    = null;
+
+// ============================================================
+// DATA LAYER — Account Management
+// ============================================================
 function getAccounts() {
-  try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY)) || []; } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY)) || []; }
+  catch (e) { return []; }
 }
 function saveAccounts(accs) {
   localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accs));
 }
 function getSession() {
-  try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; } catch(e) { return null; }
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; }
+  catch (e) { return null; }
 }
 function saveSession(s) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(s));
@@ -550,196 +815,218 @@ function getStorageKey(accountId) {
   return 'tea_records_' + accountId;
 }
 
-// ====== 打卡数据（隔离到当前账号） ======
+// ============================================================
+// DATA LAYER — Records
+// ============================================================
 function loadAll() {
-  var session = getSession();
+  const session = getSession();
   if (!session) return [];
-  try { return JSON.parse(localStorage.getItem(getStorageKey(session.accountId))) || []; } catch(e) { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(getStorageKey(session.accountId))) || [];
+  } catch (e) { return []; }
 }
 function saveAll(records) {
-  var session = getSession();
+  const session = getSession();
   if (!session) return;
-  localStorage.setItem(getStorageKey(session.accountId), JSON.stringify(records));
+  try {
+    localStorage.setItem(getStorageKey(session.accountId), JSON.stringify(records));
+  } catch (e) {
+    showToast('⚠️ 存储空间不足，请清理旧照片或导出数据');
+  }
 }
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
 }
 
-// ====== 旧数据迁移 ======
-function tryMigrateOldData(accountId) {
-  try {
-    var old = localStorage.getItem(OLD_DATA_KEY);
-    if (old) {
-      var oldRecords = JSON.parse(old);
-      if (oldRecords && oldRecords.length > 0) {
-        var key = getStorageKey(accountId);
-        var existing = JSON.parse(localStorage.getItem(key) || '[]');
-        var existingIds = {};
-        existing.forEach(function(r) { existingIds[r.id] = true; });
-        oldRecords.forEach(function(r) {
-          if (!existingIds[r.id]) { existing.push(r); existingIds[r.id] = true; }
-        });
-        localStorage.setItem(key, JSON.stringify(existing));
-      }
-      localStorage.removeItem(OLD_DATA_KEY);
-      return oldRecords.length;
+// ============================================================
+// HISTORY HELPERS — for autocomplete
+// ============================================================
+function getUniqueHistory(field) {
+  const records = loadAll();
+  const seen = new Set();
+  const values = [];
+  records.forEach(r => {
+    const v = (r[field] || '').trim();
+    if (v && !seen.has(v)) { seen.add(v); values.push(v); }
+  });
+  return values.slice(0, 30); // max 30 suggestions
+}
+
+function getRecentPhotos() {
+  const records = loadAll();
+  const seen = new Set();
+  const photos = [];
+  records.forEach(r => {
+    if (r.photo && !seen.has(r.photo)) {
+      seen.add(r.photo);
+      photos.push(r.photo);
     }
-  } catch(e) {}
-  return 0;
+  });
+  return photos.slice(0, 15); // max 15 recent photos
 }
 
-// ==================== 登录 / 注册 ====================
-function doLogin() {
-  var name = document.getElementById('loginAccount').value.trim();
-  if (!name) { showLoginError('请输入账号名称'); return; }
-
-  var accounts = getAccounts();
-  var found = null;
-  for (var i = 0; i < accounts.length; i++) {
-    if (accounts[i].name === name) { found = accounts[i]; break; }
-  }
-  if (!found) { showLoginError('账号不存在，请先注册'); return; }
-
-  performLogin(found);
-}
-
-function doRegister() {
-  var name = document.getElementById('loginAccount').value.trim();
-  if (!name) { showLoginError('请输入账号名称'); return; }
-
-  var accounts = getAccounts();
-  for (var i = 0; i < accounts.length; i++) {
-    if (accounts[i].name === name) { showLoginError('该账号已存在，请直接登录'); return; }
-  }
-
-  var newAccount = {
-    id: 'acc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-    name: name,
-    createdAt: Date.now()
-  };
-  accounts.push(newAccount);
-  saveAccounts(accounts);
-
-  var migrated = tryMigrateOldData(newAccount.id);
-  performLogin(newAccount);
-  if (migrated > 0) {
-    setTimeout(function() { showToast('已导入 ' + migrated + ' 条历史记录'); }, 500);
-  }
-}
-
-function performLogin(account) {
-  saveSession({ accountId: account.id, accountName: account.name });
-  clearLoginError();
-  document.getElementById('loginAccount').value = '';
-  document.getElementById('acctName').textContent = account.name;
-  goToCalendar();
-}
-
-function doLogout() {
-  clearSession();
-  deleteMode = false; selectedIds = []; tagFilter = null;
-  statsFilter = { sugar: '', temp: '', drink: '' };
-  showLoginPage();
-}
-
-function showAccountSheet() {
-  var session = getSession();
-  var accountName = session ? session.accountName : '未知';
-  showActionSheet([
-    '👤 当前账号：' + accountName,
-    '切换账号',
-    { label: '退出登录', danger: true }
-  ], function(i) {
-    if (i === 1) { doLogout(); }
-    else if (i === 2) { doLogout(); }
+// ============================================================
+// IMAGE COMPRESSION
+// ============================================================
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    if (file.size < 50 * 1024) {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+      return;
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > MAX_PHOTO_WIDTH) {
+        h = Math.round(h * (MAX_PHOTO_WIDTH / w));
+        w = MAX_PHOTO_WIDTH;
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', PHOTO_QUALITY));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    };
+    img.src = url;
   });
 }
 
-function showLoginError(msg) {
-  var el = document.getElementById('loginError');
-  el.textContent = msg;
-}
-function clearLoginError() {
-  document.getElementById('loginError').textContent = '';
-}
-
-function goToCalendar() {
-  document.getElementById('page-login').classList.remove('active');
-  document.getElementById('tabBar').style.display = 'flex';
-  var now = new Date();
-  currentYear = now.getFullYear();
-  currentMonth = now.getMonth() + 1;
-  document.getElementById('addDate').value = todayStr();
-  switchTab('calendar');
-}
-
-function showLoginPage() {
-  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-  document.getElementById('page-login').classList.add('active');
-  document.getElementById('tabBar').style.display = 'none';
-  document.getElementById('bottomBar').style.display = 'none';
+// ============================================================
+// DATA MIGRATION
+// ============================================================
+function tryMigrateOldData(accountId) {
+  try {
+    const old = localStorage.getItem(OLD_DATA_KEY);
+    if (!old) return 0;
+    const oldRecords = JSON.parse(old);
+    if (!oldRecords || !oldRecords.length) { localStorage.removeItem(OLD_DATA_KEY); return 0; }
+    const key = getStorageKey(accountId);
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const existingIds = new Set(existing.map(r => r.id));
+    let added = 0;
+    oldRecords.forEach(r => {
+      if (!existingIds.has(r.id)) { existing.push(r); existingIds.add(r.id); added++; }
+    });
+    localStorage.setItem(key, JSON.stringify(existing));
+    localStorage.removeItem(OLD_DATA_KEY);
+    return added;
+  } catch (e) { return 0; }
 }
 
-// ==================== 全局状态 ====================
-var currentYear, currentMonth;
-var deleteMode = false;
-var selectedIds = [];
-var tagFilter = null;
-var statsFilter = { sugar: '', temp: '', drink: '' };
-
-var WEEKDAYS = ['一','二','三','四','五','六','日'];
-var SUGARS = ['无糖','少糖','半糖','七分糖','全糖'];
-var TEMPS = ['热','常温','去冰','少冰','全冰'];
-var PIE_COLORS = ['#F8B4C8','#B4E0D0','#FFDAB9','#C4D7F2','#F5D5E0','#B5EAD7','#FFE5B4','#D4C5F0','#FCCB8F','#A8D8EA','#F9CFD4','#C1E8D5','#FDE2C3','#D0D9F0','#FFC3A0','#B8D9F0','#F7C8E0','#C5ECD9','#FFD4A8','#C0D0EF'];
-
-// ====== UI 工具 ======
-var _toastTimer;
+// ============================================================
+// UI UTILITIES — Toast
+// ============================================================
+let _toastTimer;
 function showToast(msg, ms) {
   ms = ms || 1500;
-  var t = document.getElementById('toast');
-  t.textContent = msg; t.classList.remove('hidden');
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
   clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(function() { t.classList.add('hidden'); }, ms);
+  _toastTimer = setTimeout(() => t.classList.add('hidden'), ms);
 }
 
+// ============================================================
+// UI UTILITIES — Modal
+// ============================================================
 function showModal(title, body, buttons) {
-  var ov = document.getElementById('modalOverlay');
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalBody').innerHTML = body;
-  var bc = document.getElementById('modalBtns'); bc.innerHTML = '';
-  buttons.forEach(function(b) {
-    var btn = document.createElement('button');
-    btn.textContent = b.text; btn.className = 'modal-btn ' + (b.cls || 'modal-btn-cancel');
-    btn.onclick = function() { ov.classList.add('hidden'); if (b.cb) b.cb(); };
+  const ov = $('#modalOverlay');
+  $('#modalTitle').textContent = title;
+  $('#modalBody').innerHTML = body;
+  const bc = $('#modalBtns');
+  bc.innerHTML = '';
+  buttons.forEach(b => {
+    const btn = document.createElement('button');
+    btn.textContent = b.text;
+    btn.className = 'modal-btn ' + (b.cls || 'modal-btn-cancel');
+    btn.addEventListener('click', () => { ov.classList.add('hidden'); if (b.cb) b.cb(); });
     bc.appendChild(btn);
   });
   ov.classList.remove('hidden');
 }
 
+// ============================================================
+// UI UTILITIES — Action Sheet
+// ============================================================
 function showActionSheet(items, cb) {
-  var ov = document.getElementById('sheetOverlay');
-  var box = document.getElementById('sheetBox'); box.innerHTML = '';
-  items.forEach(function(item, i) {
-    var d = document.createElement('div');
-    d.textContent = typeof item === 'string' ? item : (item.label || item);
+  const ov = $('#sheetOverlay');
+  const box = $('#sheetBox');
+  box.innerHTML = '';
+  items.forEach((item, i) => {
+    const d = document.createElement('div');
+    const label = typeof item === 'string' ? item : (item.label || item);
+    d.textContent = label;
     d.className = 'sheet-item' + (item.danger ? ' danger' : '');
-    d.onclick = function() { ov.classList.add('hidden'); cb(i, typeof item === 'string' ? item : item.value || item.label); };
+    d.addEventListener('click', () => {
+      ov.classList.add('hidden');
+      cb(i, typeof item === 'string' ? item : (item.value || item.label));
+    });
     box.appendChild(d);
   });
-  ov.onclick = function(e) { if (e.target === ov) { ov.classList.add('hidden'); cb(-1, null); } };
+  ov.addEventListener('click', function handler(e) {
+    if (e.target === ov) { ov.classList.remove('hidden'); ov.removeEventListener('click', handler); cb(-1, null); }
+  });
   ov.classList.remove('hidden');
 }
 
-// ====== Tab 切换 ======
+// ============================================================
+// UI UTILITIES — Lightbox
+// ============================================================
+function showLightbox(src) {
+  const lb = $('#lightbox');
+  $('#lightboxImg').src = src;
+  lb.classList.remove('hidden');
+  lb.addEventListener('click', function hide() {
+    lb.classList.add('hidden');
+    lb.removeEventListener('click', hide);
+  });
+}
+
+// ============================================================
+// UI UTILITIES — Escape HTML
+// ============================================================
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// UTILITY — Date Helpers
+// ============================================================
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function monthStr(y, m) {
+  return y + '-' + String(m).padStart(2, '0');
+}
+
+// ============================================================
+// PAGE NAVIGATION
+// ============================================================
 function switchTab(tab) {
-  // 未登录不允许操作
   if (!getSession()) return;
-  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-  document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
-  var pageMap = { calendar: 'page-calendar', add: 'page-add', stats: 'page-stats' };
-  document.getElementById(pageMap[tab]).classList.add('active');
-  document.querySelector('.tab-item[data-tab="' + tab + '"]').classList.add('active');
-  var bb = document.getElementById('bottomBar');
+  $$('.page').forEach(p => p.classList.remove('active'));
+  const pageMap = { calendar: 'page-calendar', add: 'page-add', stats: 'page-stats' };
+  const target = $(`#${pageMap[tab]}`);
+  if (target) target.classList.add('active');
+  $$('.tab-item').forEach(t => t.classList.remove('active'));
+  const tabEl = document.querySelector(`.tab-item[data-tab="${tab}"]`);
+  if (tabEl) tabEl.classList.add('active');
+  const bb = $('#bottomBar');
   if (tab === 'calendar') {
     bb.style.display = 'flex';
     renderBBar();
@@ -749,380 +1036,694 @@ function switchTab(tab) {
     renderStats();
   } else {
     bb.style.display = 'none';
-    document.getElementById('addDate').value = todayStr();
+    $('#addDate').value = todayStr();
+    updateHistorySuggestions();
   }
+  window.scrollTo(0, 0);
 }
 
-function todayStr() {
-  var d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+// ============================================================
+// MONTH PICKER
+// ============================================================
+function openMonthPicker() {
+  mpYear = currentYear;
+  renderMonthPicker();
+  $('#monthPickerOverlay').classList.remove('hidden');
 }
 
-// ====== 日历渲染 ======
-function renderCalendar() {
-  var records = loadAll();
-  var visible = records;
-  if (tagFilter) visible = records.filter(function(r) { return r[tagFilter.type] === tagFilter.value; });
-
-  var monthStr = currentYear + '-' + String(currentMonth).padStart(2,'0');
-  var monthRecords = visible.filter(function(r) { return r.date && r.date.startsWith(monthStr); });
-
-  document.getElementById('monthTitle').textContent = currentYear + ' 年 ' + currentMonth + ' 月';
-  renderDayGrid(monthRecords, records);
-  renderMonthStats(monthRecords);
-  renderFavorite(monthRecords);
-
-  var tip = document.getElementById('filterTip');
-  if (tagFilter) {
-    tip.style.display = 'flex';
-    document.getElementById('filterTipText').textContent =
-      '🔍 筛选: ' + (tagFilter.type === 'sugar' ? '糖分' : '温度') + ' · ' + tagFilter.value;
-  } else { tip.style.display = 'none'; }
+function closeMonthPicker() {
+  $('#monthPickerOverlay').classList.add('hidden');
 }
 
-function renderDayGrid(monthRecords, allRecords) {
-  var grid = document.getElementById('dayGrid');
-  var weekRow = document.getElementById('weekdays');
-  weekRow.innerHTML = WEEKDAYS.map(function(d) { return '<div class="weekday">' + d + '</div>'; }).join('');
+function renderMonthPicker() {
+  $('#mpYearLabel').textContent = mpYear;
+  const grid = $('#mpMonthGrid');
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const thisMonth = now.getMonth() + 1;
 
-  var jsMonth = currentMonth - 1;
-  var firstDay = new Date(currentYear, jsMonth, 1);
-  var rawDay = firstDay.getDay();
-  var startOffset = rawDay === 0 ? 6 : rawDay - 1;
-  var daysInMonth = new Date(currentYear, jsMonth + 1, 0).getDate();
-  var daysInPrevMonth = new Date(currentYear, jsMonth, 0).getDate();
-
-  var todayS = todayStr();
-  var map = {};
-  monthRecords.forEach(function(r) { if (!map[r.date]) map[r.date] = []; map[r.date].push(r); });
-
-  var selSet = new Set(selectedIds);
-
-  var html = '';
-  var prevJsMonth = jsMonth === 0 ? 11 : jsMonth - 1;
-  var prevYear = jsMonth === 0 ? currentYear - 1 : currentYear;
-  for (var i = startOffset - 1; i >= 0; i--) {
-    var d = daysInPrevMonth - i;
-    var ds = prevYear + '-' + String(prevJsMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    html += dayCellHtml(d, 'prev', ds, ds === todayS, map[ds] || [], selSet);
-  }
-  for (var d = 1; d <= daysInMonth; d++) {
-    var ds = currentYear + '-' + String(currentMonth).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    html += dayCellHtml(d, 'current', ds, ds === todayS, map[ds] || [], selSet);
-  }
-  var rendered = startOffset + daysInMonth;
-  var remaining = 42 - rendered;
-  var nextJsMonth = jsMonth === 11 ? 0 : jsMonth + 1;
-  var nextYear = jsMonth === 11 ? currentYear + 1 : currentYear;
-  for (var d = 1; d <= remaining; d++) {
-    var ds = nextYear + '-' + String(nextJsMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    html += dayCellHtml(d, 'next', ds, false, [], selSet);
-  }
+  let html = '';
+  MONTH_NAMES.forEach((name, i) => {
+    const m = i + 1;
+    let cls = 'mp-month-cell';
+    if (mpYear === currentYear && m === currentMonth) cls += ' current';
+    if (mpYear === thisYear && m === thisMonth) cls += ' today-month';
+    html += `<div class="${cls}" data-month="${m}">${name}</div>`;
+  });
   grid.innerHTML = html;
 
-  grid.querySelectorAll('.day-cell').forEach(function(el) {
-    el.addEventListener('click', function() {
-      var date = this.dataset.date;
-      if (!date || this.classList.contains('muted')) return;
-      if (deleteMode) {
-        toggleDaySelection(date);
+  grid.querySelectorAll('.mp-month-cell').forEach(cell => {
+    cell.addEventListener('click', function () {
+      const m = parseInt(this.dataset.month);
+      currentYear = mpYear;
+      currentMonth = m;
+      closeMonthPicker();
+      renderCalendar();
+      showToast(`${currentYear} 年 ${currentMonth} 月`);
+    });
+  });
+}
+
+function mpPrevYear() { mpYear--; renderMonthPicker(); }
+function mpNextYear() { mpYear++; renderMonthPicker(); }
+function mpGoToday() {
+  const now = new Date();
+  currentYear = now.getFullYear();
+  currentMonth = now.getMonth() + 1;
+  closeMonthPicker();
+  renderCalendar();
+  showToast('已回到本月');
+}
+
+// ============================================================
+// AUTH — Login / Register
+// ============================================================
+function doLogin() {
+  const name = $('#loginAccount').value.trim();
+  if (!name) { showLoginError('请输入账号名称'); return; }
+  const accounts = getAccounts();
+  const found = accounts.find(a => a.name === name);
+  if (!found) { showLoginError('账号不存在，请先注册'); return; }
+  performLogin(found);
+}
+
+function doRegister() {
+  const name = $('#loginAccount').value.trim();
+  if (!name) { showLoginError('请输入账号名称'); return; }
+  const accounts = getAccounts();
+  if (accounts.some(a => a.name === name)) { showLoginError('该账号已存在，请直接登录'); return; }
+  const newAccount = {
+    id: 'acc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    name: name,
+    createdAt: Date.now()
+  };
+  accounts.push(newAccount);
+  saveAccounts(accounts);
+  const migrated = tryMigrateOldData(newAccount.id);
+  performLogin(newAccount);
+  if (migrated > 0) {
+    setTimeout(() => showToast('已导入 ' + migrated + ' 条历史记录'), 500);
+  }
+}
+
+function performLogin(account) {
+  saveSession({ accountId: account.id, accountName: account.name });
+  clearLoginError();
+  $('#loginAccount').value = '';
+  $('#acctName').textContent = account.name;
+  goToCalendar();
+}
+
+function doLogout() {
+  clearSession();
+  deleteMode = false;
+  selectedIds = [];
+  tagFilter = null;
+  statsFilter = { sugar: '', temp: '', drink: '' };
+  goToLogin();
+}
+
+function showLoginError(msg) { $('#loginError').textContent = msg; }
+function clearLoginError() { $('#loginError').textContent = ''; }
+
+function goToCalendar() {
+  $$('.page').forEach(p => p.classList.remove('active'));
+  $('#page-calendar').classList.add('active');
+  $('#tabBar').style.display = 'flex';
+  const now = new Date();
+  currentYear  = now.getFullYear();
+  currentMonth = now.getMonth() + 1;
+  $('#addDate').value = todayStr();
+  renderBBar();
+  renderCalendar();
+}
+
+function goToLogin() {
+  $$('.page').forEach(p => p.classList.remove('active'));
+  $('#page-login').classList.add('active');
+  $('#tabBar').style.display = 'none';
+  $('#bottomBar').style.display = 'none';
+}
+
+// ============================================================
+// ACCOUNT SHEET
+// ============================================================
+function showAccountSheet() {
+  const session = getSession();
+  const accountName = session ? session.accountName : '未知';
+  showActionSheet([
+    `👤 当前账号：${accountName}`,
+    { label: '💾 导出数据备份', value: 'export' },
+    { label: '📥 导入数据恢复', value: 'import' },
+    { label: '退出登录', danger: true }
+  ], (i, val) => {
+    if (val === 'export') exportData();
+    else if (val === 'import') importData();
+    else if (i === 3) doLogout();
+  });
+}
+
+// ============================================================
+// DATA EXPORT / IMPORT
+// ============================================================
+function exportData() {
+  const records = loadAll();
+  if (!records.length) { showToast('暂无数据可导出'); return; }
+  const session = getSession();
+  const json = JSON.stringify({
+    accountName: session ? session.accountName : '',
+    exportedAt: new Date().toISOString(),
+    records: records
+  }, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tea-records-backup-${todayStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ 数据已导出');
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data.records || !Array.isArray(data.records)) throw new Error('数据格式不正确');
+      showModal('导入数据', `即将导入 ${data.records.length} 条记录（备份时间：${data.exportedAt || '未知'}），会与现有数据合并，是否继续？`, [
+        { text: '取消', cls: 'modal-btn-cancel' },
+        { text: '确认导入', cls: 'modal-btn-confirm', cb: () => {
+          const existing = loadAll();
+          const existingIds = new Set(existing.map(r => r.id));
+          let added = 0;
+          data.records.forEach(r => {
+            if (!existingIds.has(r.id)) { existing.push(r); existingIds.add(r.id); added++; }
+          });
+          saveAll(existing);
+          renderCalendar();
+          showToast(`✅ 已导入 ${added} 条记录`);
+        }}
+      ]);
+    } catch (e) { showToast('⚠️ 文件格式不正确'); }
+  });
+  input.click();
+}
+
+// ============================================================
+// AUTOCOMPLETE — Drink / Store / Photo History
+// ============================================================
+function updateHistorySuggestions() {
+  renderDrinkHistory();
+  renderStoreHistory();
+  renderPhotoHistory();
+}
+
+function renderDrinkHistory() {
+  const vals = getUniqueHistory('drinkName');
+  renderSuggestDropdown('drinkSuggest', vals, (val) => {
+    $('#addDrink').value = val;
+    hideAllSuggests();
+  });
+}
+
+function renderStoreHistory() {
+  const vals = getUniqueHistory('storeName');
+  renderSuggestDropdown('storeSuggest', vals, (val) => {
+    $('#addStore').value = val;
+    hideAllSuggests();
+  });
+}
+
+function renderSuggestDropdown(dropdownId, values, onSelect) {
+  const dd = $('#' + dropdownId);
+  if (!dd) return;
+  if (!values.length) { dd.classList.remove('show'); return; }
+  dd.innerHTML = values.map(v =>
+    `<div class="suggest-item">${escHtml(v)}</div>`
+  ).join('');
+  dd.querySelectorAll('.suggest-item').forEach(item => {
+    item.addEventListener('click', () => onSelect(item.textContent));
+  });
+}
+
+function filterSuggest(inputId, dropdownId) {
+  const input = $('#' + inputId);
+  const dd = $('#' + dropdownId);
+  if (!dd || !input) return;
+  const val = input.value.trim().toLowerCase();
+  if (!val) { dd.classList.remove('show'); return; }
+  const field = inputId === 'addDrink' ? 'drinkName' : 'storeName';
+  const allVals = getUniqueHistory(field);
+  const filtered = allVals.filter(v => v.toLowerCase().includes(val));
+  if (!filtered.length) { dd.classList.remove('show'); return; }
+  renderSuggestDropdown(dropdownId, filtered.slice(0, 10), (selVal) => {
+    $('#' + inputId).value = selVal;
+    hideAllSuggests();
+  });
+  dd.classList.add('show');
+}
+
+function hideAllSuggests() {
+  $$('.suggest-dropdown').forEach(d => d.classList.remove('show'));
+}
+
+function renderPhotoHistory() {
+  const photos = getRecentPhotos();
+  const container = $('#historyPhotos');
+  if (!photos.length) { container.style.display = 'none'; return; }
+  container.style.display = 'flex';
+  container.innerHTML = photos.map((p, i) =>
+    `<img class="history-photo-thumb" src="${escHtml(p)}" data-photo="${i}" alt="">`
+  ).join('');
+
+  // Highlight current selection
+  if (photoData) {
+    container.querySelectorAll('.history-photo-thumb').forEach(img => {
+      if (img.src === photoData) img.classList.add('selected');
+    });
+  }
+
+  container.querySelectorAll('.history-photo-thumb').forEach(img => {
+    img.addEventListener('click', function () {
+      const src = this.src;
+      if (photoData === src) {
+        // Deselect
+        photoData = null;
+        $('#photoPreviewArea').style.display = 'none';
+        $('#photoUploadArea').style.display = 'flex';
+        container.querySelectorAll('.history-photo-thumb').forEach(el => el.classList.remove('selected'));
       } else {
-        showDayDetail(date);
+        photoData = src;
+        $('#photoPreviewImg').src = src;
+        $('#photoUploadArea').style.display = 'none';
+        $('#photoPreviewArea').style.display = 'block';
+        container.querySelectorAll('.history-photo-thumb').forEach(el => {
+          el.classList.toggle('selected', el.src === src);
+        });
       }
     });
   });
 }
 
+// ============================================================
+// CALENDAR RENDERING
+// ============================================================
+function renderCalendar() {
+  const records = loadAll();
+  let visible = records;
+  if (tagFilter) {
+    visible = records.filter(r => r[tagFilter.type] === tagFilter.value);
+  }
+  const mStr = monthStr(currentYear, currentMonth);
+  const monthRecords = visible.filter(r => r.date && r.date.startsWith(mStr));
+  $('#monthTitle').textContent = `${currentYear} 年 ${currentMonth} 月`;
+  renderDayGrid(monthRecords);
+  renderMonthStats(monthRecords);
+  renderFavorite(monthRecords);
+  const tip = $('#filterTip');
+  if (tagFilter) {
+    tip.style.display = 'flex';
+    $('#filterTipText').textContent = `🔍 筛选: ${tagFilter.type === 'sugar' ? '糖分' : '温度'} · ${tagFilter.value}`;
+  } else { tip.style.display = 'none'; }
+}
+
+function renderDayGrid(monthRecords) {
+  const grid = $('#dayGrid');
+  const weekRow = $('#weekdays');
+  weekRow.innerHTML = WEEKDAYS.map(d => `<div class="weekday">${d}</div>`).join('');
+  const jsMonth = currentMonth - 1;
+  const firstDay = new Date(currentYear, jsMonth, 1);
+  const rawDay = firstDay.getDay();
+  const startOffset = rawDay === 0 ? 6 : rawDay - 1;
+  const daysInMonth = new Date(currentYear, jsMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(currentYear, jsMonth, 0).getDate();
+  const todayS = todayStr();
+  const map = {};
+  monthRecords.forEach(r => {
+    if (!map[r.date]) map[r.date] = [];
+    map[r.date].push(r);
+  });
+  const selSet = new Set(selectedIds);
+  let html = '';
+  const prevJsMonth = jsMonth === 0 ? 11 : jsMonth - 1;
+  const prevYear = jsMonth === 0 ? currentYear - 1 : currentYear;
+  for (let i = startOffset - 1; i >= 0; i--) {
+    const d = daysInPrevMonth - i;
+    const ds = `${prevYear}-${String(prevJsMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    html += dayCellHtml(d, 'prev', ds, ds === todayS, map[ds] || [], selSet);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    html += dayCellHtml(d, 'current', ds, ds === todayS, map[ds] || [], selSet);
+  }
+  const rendered = startOffset + daysInMonth;
+  const remaining = 42 - rendered;
+  const nextJsMonth = jsMonth === 11 ? 0 : jsMonth + 1;
+  const nextYear = jsMonth === 11 ? currentYear + 1 : currentYear;
+  for (let d = 1; d <= remaining; d++) {
+    const ds = `${nextYear}-${String(nextJsMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    html += dayCellHtml(d, 'next', ds, false, [], selSet);
+  }
+  grid.innerHTML = html;
+  grid.querySelectorAll('.day-cell').forEach(el => {
+    el.addEventListener('click', function () {
+      const date = this.dataset.date;
+      if (!date || this.classList.contains('muted')) return;
+      if (deleteMode) toggleDaySelection(date);
+      else showDayDetail(date);
+    });
+  });
+}
+
 function dayCellHtml(day, month, dateStr, isToday, recs, selSet) {
-  var cls = ['day-cell'];
+  const cls = ['day-cell'];
   if (month !== 'current') cls.push('muted');
   if (isToday) cls.push('today');
-  var hasRecs = recs.length > 0;
+  const hasRecs = recs.length > 0;
   if (hasRecs && deleteMode) cls.push('selectable');
-  if (hasRecs && deleteMode && recs.every(function(r) { return selSet.has(r.id); })) cls.push('selected');
-
-  var inner = '<span>' + day + '</span>';
+  if (hasRecs && deleteMode && recs.every(r => selSet.has(r.id))) cls.push('selected');
+  if (hasRecs && recs[0].photo) cls.push('has-photo');
+  let inner = `<span>${day}</span>`;
   if (month === 'current' && hasRecs && recs[0].photo) {
-    inner += '<img class="day-photo" src="' + escHtml(recs[0].photo) + '" alt="">';
+    inner += `<img class="day-photo" src="${escHtml(recs[0].photo)}" alt="" loading="lazy">`;
   }
   if (recs.length > 1) {
-    inner += '<span class="day-badge">' + recs.length + '</span>';
+    inner += `<span class="day-badge">${recs.length}</span>`;
   } else if (hasRecs && !recs[0].photo) {
     inner += '<span class="day-dot"></span>';
   }
-  return '<div class="' + cls.join(' ') + '" data-date="' + dateStr + '">' + inner + '</div>';
+  return `<div class="${cls.join(' ')}" data-date="${dateStr}">${inner}</div>`;
 }
 
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-// ====== 当天记录详情 ======
+// ============================================================
+// DAY DETAIL
+// ============================================================
 function showDayDetail(date) {
-  var records = loadAll().filter(function(r) { return r.date === date; });
+  const records = loadAll().filter(r => r.date === date);
   if (!records.length) return;
-  var items = records.map(function(r) {
-    return (r.drinkName||'?') + ' @' + (r.storeName||'?') + ' [' + (r.sugar||'?') + '/' + (r.temperature||'?') + ']';
+  let body = '';
+  records.forEach(r => {
+    body += `${r.drinkName || '?'} @${r.storeName || '?'} [${r.sugar || '?'}/${r.temperature || '?'}]`;
+    if (r.photo) body += ' 📷';
+    body += '\n';
   });
-  showModal(date, items.join('\n'), [{text: '知道了', cls: 'modal-btn-confirm'}]);
+  const buttons = [{ text: '知道了', cls: 'modal-btn-confirm' }];
+  const firstPhoto = records.find(r => r.photo);
+  if (firstPhoto) {
+    buttons.unshift({
+      text: '🖼 查看照片', cls: 'modal-btn-cancel',
+      cb: () => showLightbox(firstPhoto.photo)
+    });
+  }
+  showModal(date, body.trim(), buttons);
 }
 
-// ====== 删除模式：勾选日期 ======
+// ============================================================
+// DELETE MODE
+// ============================================================
 function toggleDaySelection(date) {
-  var records = loadAll().filter(function(r) { return r.date === date; });
+  const records = loadAll().filter(r => r.date === date);
   if (!records.length) return;
-  var ids = records.map(function(r) { return r.id; });
-  var sel = selectedIds.slice();
-  var allSel = ids.every(function(id) { return sel.indexOf(id) !== -1; });
-  if (allSel) {
-    sel = sel.filter(function(id) { return ids.indexOf(id) === -1; });
-  } else {
-    ids.forEach(function(id) { if (sel.indexOf(id) === -1) sel.push(id); });
-  }
+  const ids = records.map(r => r.id);
+  let sel = selectedIds.slice();
+  const allSel = ids.every(id => sel.includes(id));
+  if (allSel) sel = sel.filter(id => !ids.includes(id));
+  else ids.forEach(id => { if (!sel.includes(id)) sel.push(id); });
   selectedIds = sel;
   renderCalendar();
+  renderBBar();
 }
 
-// ====== 本月统计 ======
-function renderMonthStats(monthRecords) {
-  document.getElementById('totalCups').textContent = monthRecords.length;
-  var stores = new Set(monthRecords.map(function(r) { return r.storeName; }).filter(Boolean));
-  document.getElementById('totalStores').textContent = stores.size;
+function enterDeleteMode() {
+  showModal('删除记录', '点击日历中有打卡的日期即可选中，确认后批量删除', [
+    { text: '取消', cls: 'modal-btn-cancel' },
+    { text: '进入删除模式', cls: 'modal-btn-danger', cb: () => {
+      deleteMode = true; selectedIds = []; tagFilter = null;
+      renderCalendar(); renderBBar();
+    }}
+  ]);
+}
 
-  var photos = monthRecords.filter(function(r) { return r.photo; }).map(function(r) { return r.photo; }).slice(0, 30);
-  var scroll = document.getElementById('photoScroll');
-  var empty = document.getElementById('emptyNote');
+function confirmDelete() {
+  if (!selectedIds.length) { showToast('请先选择要删除的日期'); return; }
+  showModal('确认删除', `将删除 ${selectedIds.length} 条打卡记录，不可恢复`, [
+    { text: '取消', cls: 'modal-btn-cancel' },
+    { text: '确认删除', cls: 'modal-btn-danger', cb: () => {
+      let records = loadAll();
+      const idSet = new Set(selectedIds);
+      records = records.filter(r => !idSet.has(r.id));
+      saveAll(records);
+      deleteMode = false; selectedIds = [];
+      renderCalendar(); renderBBar();
+      showToast('已删除');
+    }}
+  ]);
+}
+
+function cancelDelete() { deleteMode = false; selectedIds = []; renderCalendar(); renderBBar(); }
+
+// ============================================================
+// TAG FILTER
+// ============================================================
+function showTagFilter() {
+  showActionSheet(['按糖分筛选', '按温度筛选', '清除筛选'], (i) => {
+    if (i === 0) showTagPicker('sugar', SUGARS);
+    else if (i === 1) showTagPicker('temperature', TEMPS);
+    else if (i === 2) { tagFilter = null; renderCalendar(); showToast('已清除筛选'); }
+  });
+}
+
+function showTagPicker(type, options) {
+  showActionSheet(options, (i, val) => {
+    if (i >= 0) {
+      tagFilter = { type, value: val };
+      renderCalendar();
+      showToast(`筛选: ${type === 'sugar' ? '糖分' : '温度'} · ${val}`);
+    }
+  });
+}
+
+function clearFilter() { tagFilter = null; renderCalendar(); }
+
+// ============================================================
+// MONTH STATS
+// ============================================================
+function renderMonthStats(monthRecords) {
+  $('#totalCups').textContent = monthRecords.length;
+  const storeSet = new Set(monthRecords.map(r => r.storeName).filter(Boolean));
+  $('#totalStores').textContent = storeSet.size;
+  const photos = monthRecords.filter(r => r.photo).map(r => r.photo).slice(0, 30);
+  const scroll = $('#photoScroll');
+  const empty = $('#emptyNote');
   if (photos.length > 0) {
-    scroll.innerHTML = photos.map(function(p) { return '<img class="thumb-img" src="' + escHtml(p) + '" alt="">'; }).join('');
+    scroll.innerHTML = photos.map(p =>
+      `<img class="thumb-img" src="${escHtml(p)}" alt="" loading="lazy">`
+    ).join('');
     scroll.style.display = 'flex';
     empty.style.display = 'none';
+    scroll.querySelectorAll('.thumb-img').forEach((img, i) => {
+      img.addEventListener('click', () => showLightbox(photos[i]));
+    });
   } else {
     scroll.style.display = 'none';
     empty.style.display = monthRecords.length === 0 ? 'block' : 'none';
   }
 }
 
-// ====== 本月最爱 ======
+// ============================================================
+// FAVORITE
+// ============================================================
 function renderFavorite(monthRecords) {
-  var card = document.getElementById('favCard');
+  const card = $('#favCard');
   if (!monthRecords.length) { card.style.display = 'none'; return; }
-  var freq = {};
-  monthRecords.forEach(function(r) { var n = r.drinkName || '未命名'; freq[n] = (freq[n]||0)+1; });
-  var best = '', bestN = 0;
-  Object.keys(freq).forEach(function(k) { if (freq[k] > bestN) { best = k; bestN = freq[k]; } });
-  var bp = monthRecords.filter(function(r) { return (r.drinkName||'未命名')===best && r.photo; })[0];
+  const freq = {};
+  monthRecords.forEach(r => {
+    const n = r.drinkName || '未命名';
+    freq[n] = (freq[n] || 0) + 1;
+  });
+  let best = '', bestN = 0;
+  Object.entries(freq).forEach(([k, v]) => { if (v > bestN) { best = k; bestN = v; } });
+  const bestPhotoRec = monthRecords.find(r => (r.drinkName || '未命名') === best && r.photo);
   card.style.display = 'block';
-  document.getElementById('favName').textContent = best;
-  document.getElementById('favCount').textContent = '本月喝了 ' + bestN + ' 次';
-  var favImg = document.getElementById('favImg');
-  if (bp && bp.photo) {
-    favImg.innerHTML = '<img class="fav-photo" src="' + escHtml(bp.photo) + '" alt="">';
+  $('#favName').textContent = best;
+  $('#favCount').textContent = `本月喝了 ${bestN} 次`;
+  const favImg = $('#favImg');
+  if (bestPhotoRec && bestPhotoRec.photo) {
+    favImg.innerHTML = `<img class="fav-photo" src="${escHtml(bestPhotoRec.photo)}" alt="">`;
+    favImg.querySelector('img').addEventListener('click', () => showLightbox(bestPhotoRec.photo));
   } else {
     favImg.innerHTML = '<div class="fav-icon">🧋</div>';
   }
 }
 
-// ====== 月份切换 ======
+// ============================================================
+// MONTH NAVIGATION
+// ============================================================
 function prevMonth() {
-  if (currentMonth===1) { currentYear--; currentMonth=12; }
+  if (currentMonth === 1) { currentYear--; currentMonth = 12; }
   else currentMonth--;
   renderCalendar();
 }
 function nextMonth() {
-  if (currentMonth===12) { currentYear++; currentMonth=1; }
+  if (currentMonth === 12) { currentYear++; currentMonth = 1; }
   else currentMonth++;
   renderCalendar();
 }
 
-// ====== 底部操作栏 ======
+// ============================================================
+// BOTTOM ACTION BAR
+// ============================================================
 function renderBBar() {
-  var bb = document.getElementById('bottomBar');
+  const bb = $('#bottomBar');
   if (deleteMode) {
-    bb.innerHTML =
-      '<button class="bbtn bbtn-cancel" onclick="cancelDelete()">取消</button>' +
-      '<div class="delete-hint">已选 ' + selectedIds.length + ' 条</div>' +
-      '<button class="bbtn bbtn-danger" onclick="confirmDelete()">确认删除</button>';
+    bb.innerHTML = `
+      <button class="bbtn bbtn-cancel" id="btnCancelDelete">取消</button>
+      <div class="delete-hint">已选 ${selectedIds.length} 条</div>
+      <button class="bbtn bbtn-danger" id="btnConfirmDelete">确认删除</button>`;
+    $('#btnCancelDelete').addEventListener('click', cancelDelete);
+    $('#btnConfirmDelete').addEventListener('click', confirmDelete);
   } else {
-    bb.innerHTML =
-      '<button class="bbtn bbtn-outline" onclick="toggleDeleteMode()">🗑 删除记录</button>' +
-      '<button class="bbtn bbtn-outline" onclick="showTagFilter()">🏷 分类标签</button>' +
-      '<button class="bbtn bbtn-primary" onclick="switchTab(\'add\')">✚ 新增打卡</button>';
+    bb.innerHTML = `
+      <button class="bbtn bbtn-outline" id="btnDeleteMode">🗑 删除记录</button>
+      <button class="bbtn bbtn-outline" id="btnTagFilter">🏷 分类标签</button>
+      <button class="bbtn bbtn-primary" id="btnAddRecord">✚ 新增打卡</button>`;
+    $('#btnDeleteMode').addEventListener('click', enterDeleteMode);
+    $('#btnTagFilter').addEventListener('click', showTagFilter);
+    $('#btnAddRecord').addEventListener('click', () => switchTab('add'));
   }
 }
 
-// ====== 删除模式 ======
-function toggleDeleteMode() {
-  if (deleteMode) { deleteMode = false; selectedIds = []; renderCalendar(); return; }
-  showModal('删除记录', '点击日历中有打卡的日期即可选中，确认后批量删除', [
-    {text: '取消', cls: 'modal-btn-cancel'},
-    {text: '进入删除模式', cls: 'modal-btn-danger', cb: function() {
-      deleteMode = true; selectedIds = []; tagFilter = null; renderCalendar();
-    }}
-  ]);
-}
-function confirmDelete() {
-  if (!selectedIds.length) { showToast('请先选择要删除的日期'); return; }
-  showModal('确认删除', '将删除 ' + selectedIds.length + ' 条打卡记录，不可恢复', [
-    {text: '取消', cls: 'modal-btn-cancel'},
-    {text: '确认删除', cls: 'modal-btn-danger', cb: function() {
-      var records = loadAll();
-      var idSet = new Set(selectedIds);
-      records = records.filter(function(r) { return !idSet.has(r.id); });
-      saveAll(records);
-      deleteMode = false; selectedIds = [];
-      renderCalendar();
-      showToast('已删除');
-    }}
-  ]);
-}
-function cancelDelete() { deleteMode = false; selectedIds = []; renderCalendar(); }
+// ============================================================
+// ADD RECORD
+// ============================================================
+function choosePhoto() { $('#photoInput').click(); }
 
-// ====== 标签筛选 ======
-function showTagFilter() {
-  showActionSheet(['按糖分筛选', '按温度筛选', '清除筛选'], function(i) {
-    if (i === 0) {
-      showTagPicker('sugar', SUGARS);
-    } else if (i === 1) {
-      showTagPicker('temperature', TEMPS);
-    } else if (i === 2) {
-      tagFilter = null; renderCalendar(); showToast('已清除筛选');
-    }
-  });
-}
-function showTagPicker(type, options) {
-  showActionSheet(options, function(i, val) {
-    if (i >= 0) {
-      tagFilter = { type: type, value: val };
-      renderCalendar();
-      showToast('筛选: ' + (type==='sugar'?'糖分':'温度') + '·' + val);
-    }
-  });
-}
-function clearFilter() { tagFilter = null; renderCalendar(); }
-
-// ====== 新增打卡 ======
-function choosePhoto() { document.getElementById('photoInput').click(); }
 function onPhotoSelected(e) {
-  var file = e.target.files[0];
+  const file = e.target.files[0];
   if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(ev) {
-    document.getElementById('photoPreviewImg').src = ev.target.result;
-    document.getElementById('photoUploadArea').style.display = 'none';
-    document.getElementById('photoPreviewArea').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
+  compressImage(file).then(dataUrl => {
+    photoData = dataUrl;
+    $('#photoPreviewImg').src = dataUrl;
+    $('#photoUploadArea').style.display = 'none';
+    $('#photoPreviewArea').style.display = 'block';
+    // Update history selection
+    $$('.history-photo-thumb').forEach(el => el.classList.remove('selected'));
+  }).catch(() => { showToast('图片处理失败，请重试'); });
 }
+
 function removePhoto() {
-  document.getElementById('photoInput').value = '';
-  document.getElementById('photoPreviewImg').src = '';
-  document.getElementById('photoUploadArea').style.display = 'flex';
-  document.getElementById('photoPreviewArea').style.display = 'none';
+  photoData = null;
+  $('#photoInput').value = '';
+  $('#photoPreviewImg').src = '';
+  $('#photoUploadArea').style.display = 'flex';
+  $('#photoPreviewArea').style.display = 'none';
+  $$('.history-photo-thumb').forEach(el => el.classList.remove('selected'));
 }
+
 function submitRecord() {
   if (!getSession()) { showToast('请先登录'); return; }
-  var drink = document.getElementById('addDrink').value.trim();
-  var store = document.getElementById('addStore').value.trim();
+  const drink = $('#addDrink').value.trim();
+  const store = $('#addStore').value.trim();
   if (!drink) { showToast('请输入饮品名称'); return; }
   if (!store) { showToast('请输入门店名称'); return; }
-  var sugar = document.getElementById('addSugar').value;
-  var temp = document.getElementById('addTemp').value;
-  var date = document.getElementById('addDate').value || todayStr();
-  var photoSrc = document.getElementById('photoPreviewImg').src;
-
-  var record = {
+  const record = {
     id: genId(),
     drinkName: drink,
     storeName: store,
-    sugar: sugar, temperature: temp,
-    photo: photoSrc || '',
-    date: date,
+    sugar: $('#addSugar').value,
+    temperature: $('#addTemp').value,
+    photo: photoData || '',
+    date: $('#addDate').value || todayStr(),
     timestamp: Date.now()
   };
-  var records = loadAll();
+  const records = loadAll();
   records.unshift(record);
   saveAll(records);
-
-  document.getElementById('addDrink').value = '';
-  document.getElementById('addStore').value = '';
-  document.getElementById('addSugar').value = '半糖';
-  document.getElementById('addTemp').value = '常温';
+  $('#addDrink').value = '';
+  $('#addStore').value = '';
+  $('#addSugar').value = '半糖';
+  $('#addTemp').value = '常温';
   removePhoto();
+  hideAllSuggests();
   showToast('打卡成功 🧋');
   switchTab('calendar');
 }
 
-// ====== 数据统计 ======
+// ============================================================
+// STATS PAGE
+// ============================================================
 function renderStats() {
-  var records = loadAll();
-  if (statsFilter.sugar) records = records.filter(function(r) { return r.sugar === statsFilter.sugar; });
-  if (statsFilter.temp)  records = records.filter(function(r) { return r.temperature === statsFilter.temp; });
-  if (statsFilter.drink) records = records.filter(function(r) { return r.drinkName === statsFilter.drink; });
-
-  var cs = document.getElementById('chipSugar');
-  var ct = document.getElementById('chipTemp');
-  var cd = document.getElementById('chipDrink');
+  let records = loadAll();
+  if (statsFilter.sugar) records = records.filter(r => r.sugar === statsFilter.sugar);
+  if (statsFilter.temp)  records = records.filter(r => r.temperature === statsFilter.temp);
+  if (statsFilter.drink) records = records.filter(r => r.drinkName === statsFilter.drink);
+  const cs = $('#chipSugar'), ct = $('#chipTemp'), cd = $('#chipDrink');
   cs.classList.toggle('active', !!statsFilter.sugar);
   cs.textContent = statsFilter.sugar || '糖分 ▽';
   ct.classList.toggle('active', !!statsFilter.temp);
   ct.textContent = statsFilter.temp || '温度 ▽';
   cd.classList.toggle('active', !!statsFilter.drink);
   cd.textContent = statsFilter.drink || '饮品 ▽';
-  document.getElementById('filterClearBtn').style.display = (statsFilter.sugar||statsFilter.temp||statsFilter.drink) ? 'inline' : 'none';
-
+  const hasFilter = statsFilter.sugar || statsFilter.temp || statsFilter.drink;
+  $('#filterClearBtn').classList.toggle('hidden', !hasFilter);
   if (!records.length) {
-    document.getElementById('statsChartCard').style.display = 'none';
-    document.getElementById('storeListCard').style.display = 'none';
-    document.getElementById('statsEmptyCard').style.display = 'block';
+    $('#statsChartCard').style.display = 'none';
+    $('#storeListCard').style.display = 'none';
+    $('#statsEmptyCard').style.display = 'block';
     return;
   }
-
-  document.getElementById('statsEmptyCard').style.display = 'none';
-  document.getElementById('statsChartCard').style.display = 'block';
-  document.getElementById('storeListCard').style.display = 'block';
-  document.getElementById('statsTotal').textContent = '共 ' + records.length + ' 杯';
-
-  var map = {};
-  records.forEach(function(r) { var k = r.storeName||'未知门店'; map[k] = (map[k]||0)+1; });
-  var total = records.length;
-  var storeStats = Object.keys(map).map(function(name, i) {
-    return {
-      name: name,
-      count: map[name],
-      percent: Math.round(map[name]/total*100),
+  $('#statsEmptyCard').style.display = 'none';
+  $('#statsChartCard').style.display = 'block';
+  $('#storeListCard').style.display = 'block';
+  $('#statsTotal').textContent = `共 ${records.length} 杯`;
+  const map = {};
+  records.forEach(r => {
+    const k = r.storeName || '未知门店';
+    map[k] = (map[k] || 0) + 1;
+  });
+  const total = records.length;
+  const storeStats = Object.entries(map)
+    .map(([name, count], i) => ({
+      name, count,
+      percent: Math.round((count / total) * 100),
       color: PIE_COLORS[i % PIE_COLORS.length]
-    };
-  }).sort(function(a,b) { return b.count - a.count; });
-
+    }))
+    .sort((a, b) => b.count - a.count);
   drawPie(storeStats);
   renderStoreList(storeStats);
 }
 
 function drawPie(storeStats) {
-  var canvas = document.getElementById('pieCanvas');
-  var ctx = canvas.getContext('2d');
-  var w = canvas.width, h = canvas.height;
+  const canvas = $('#pieCanvas');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
-  var cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 30;
-
-  var start = -Math.PI/2;
-  storeStats.forEach(function(item) {
-    var angle = (item.percent/100) * Math.PI * 2;
+  const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 - 30;
+  let start = -Math.PI / 2;
+  storeStats.forEach(item => {
+    const angle = (item.percent / 100) * Math.PI * 2;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, r, start, start + angle);
     ctx.closePath();
     ctx.fillStyle = item.color;
     ctx.fill();
-
     if (item.percent >= 5) {
-      var mid = start + angle/2;
-      var lx = cx + Math.cos(mid) * (r + 20);
-      var ly = cy + Math.sin(mid) * (r + 20);
-      ctx.fillStyle = '#4a3728';
+      const mid = start + angle / 2;
+      const lx = cx + Math.cos(mid) * (r + 18);
+      const ly = cy + Math.sin(mid) * (r + 18);
+      ctx.fillStyle = '#5d4e5f';
       ctx.font = '11px sans-serif';
       ctx.textAlign = lx > cx ? 'left' : 'right';
       ctx.textBaseline = 'middle';
-      var label = item.name.length > 6 ? item.name.slice(0,5)+'…' : item.name;
-      label += ' ' + item.percent + '%';
+      let label = item.name.length > 6 ? item.name.slice(0, 5) + '…' : item.name;
+      label += ` ${item.percent}%`;
       ctx.fillText(label, lx, ly);
     }
     start += angle;
@@ -1130,74 +1731,155 @@ function drawPie(storeStats) {
 }
 
 function renderStoreList(storeStats) {
-  document.getElementById('storeList').innerHTML = storeStats.map(function(s) {
-    return '<div class="store-row" onclick="showStoreDetail(\'' + escHtml(s.name).replace(/'/g,"\\'") + '\')">' +
-      '<span class="store-dot" style="background:' + s.color + '"></span>' +
-      '<span class="store-name">' + escHtml(s.name) + '</span>' +
-      '<div class="store-bar-wrap"><div class="store-bar" style="width:' + s.percent + '%"></div></div>' +
-      '<span class="store-stat">' + s.count + '杯 ' + s.percent + '%</span>' +
-    '</div>';
-  }).join('');
+  $('#storeList').innerHTML = storeStats.map(s =>
+    `<div class="store-row" data-name="${escHtml(s.name)}">
+      <span class="store-dot" style="background:${s.color}"></span>
+      <span class="store-name">${escHtml(s.name)}</span>
+      <div class="store-bar-wrap"><div class="store-bar" style="width:${s.percent}%"></div></div>
+      <span class="store-stat">${s.count}杯 ${s.percent}%</span>
+    </div>`
+  ).join('');
+  $('#storeList').querySelectorAll('.store-row').forEach(row => {
+    row.addEventListener('click', function () { showStoreDetail(this.dataset.name); });
+  });
 }
 
 function showStoreDetail(name) {
-  var records = loadAll().filter(function(r) { return (r.storeName||'未知门店') === name; });
-  var drinks = [];
-  records.forEach(function(r) { if (r.drinkName && drinks.indexOf(r.drinkName)===-1) drinks.push(r.drinkName); });
-  showModal(name, '共 ' + records.length + ' 杯\n饮品: ' + (drinks.join('、') || '无'), [{text: '好的', cls: 'modal-btn-confirm'}]);
+  const records = loadAll().filter(r => (r.storeName || '未知门店') === name);
+  const drinks = [...new Set(records.map(r => r.drinkName).filter(Boolean))];
+  showModal(name, `共 ${records.length} 杯\n饮品: ${drinks.join('、') || '无'}`, [
+    { text: '好的', cls: 'modal-btn-confirm' }
+  ]);
 }
 
 function pickFilter(type) {
-  var allRecords = loadAll();
-  var options;
-  if (type === 'sugar') {
-    options = []; allRecords.forEach(function(r) { if (r.sugar && options.indexOf(r.sugar)===-1) options.push(r.sugar); });
-  } else if (type === 'temp') {
-    options = []; allRecords.forEach(function(r) { if (r.temperature && options.indexOf(r.temperature)===-1) options.push(r.temperature); });
-  } else {
-    options = []; allRecords.forEach(function(r) { if (r.drinkName && options.indexOf(r.drinkName)===-1) options.push(r.drinkName); });
-  }
+  const allRecords = loadAll();
+  let options = [];
+  const seen = new Set();
+  if (type === 'sugar') allRecords.forEach(r => { if (r.sugar && !seen.has(r.sugar)) { seen.add(r.sugar); options.push(r.sugar); } });
+  else if (type === 'temp') allRecords.forEach(r => { if (r.temperature && !seen.has(r.temperature)) { seen.add(r.temperature); options.push(r.temperature); } });
+  else allRecords.forEach(r => { if (r.drinkName && !seen.has(r.drinkName)) { seen.add(r.drinkName); options.push(r.drinkName); } });
   if (!options.length) { showToast('暂无数据'); return; }
-  var items = ['全部'].concat(options);
-  showActionSheet(items, function(i, val) {
+  const items = ['全部'].concat(options);
+  showActionSheet(items, (i, val) => {
     if (i < 0) return;
-    var v = i === 0 ? '' : val;
+    const v = i === 0 ? '' : val;
     if (type === 'sugar') statsFilter.sugar = v;
     else if (type === 'temp') statsFilter.temp = v;
     else statsFilter.drink = v;
     renderStats();
   });
 }
-function clearStatsFilter() { statsFilter = { sugar:'', temp:'', drink:'' }; renderStats(); }
 
-// ====== 初始化 ======
-(function init() {
-  // 恢复登录态
-  var session = getSession();
-  if (session) {
-    document.getElementById('acctName').textContent = session.accountName;
-    document.getElementById('page-login').classList.remove('active');
-    document.getElementById('tabBar').style.display = 'flex';
-    var now = new Date();
-    currentYear = now.getFullYear();
-    currentMonth = now.getMonth() + 1;
-    document.getElementById('addDate').value = todayStr();
-    renderBBar();
-    renderCalendar();
-  } else {
-    // 显示登录页
-    document.getElementById('tabBar').style.display = 'none';
-    document.getElementById('bottomBar').style.display = 'none';
-    var now2 = new Date();
-    currentYear = now2.getFullYear();
-    currentMonth = now2.getMonth() + 1;
-    document.getElementById('addDate').value = todayStr();
-  }
+function clearStatsFilter() { statsFilter = { sugar: '', temp: '', drink: '' }; renderStats(); }
 
-  // 登录页回车登录
-  document.getElementById('loginAccount').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') doLogin();
+// ============================================================
+// EVENT BINDINGS
+// ============================================================
+function bindEvents() {
+  // Login
+  $('#btnLogin').addEventListener('click', doLogin);
+  $('#btnRegister').addEventListener('click', doRegister);
+  $('#loginAccount').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+
+  // Calendar navigation
+  $('#btnPrevMonth').addEventListener('click', prevMonth);
+  $('#btnNextMonth').addEventListener('click', nextMonth);
+  $('#btnGoStats').addEventListener('click', () => switchTab('stats'));
+  $('#btnClearFilter').addEventListener('click', clearFilter);
+
+  // Month picker
+  $('#monthTitle').addEventListener('click', openMonthPicker);
+  $('#mpPrevYear').addEventListener('click', mpPrevYear);
+  $('#mpNextYear').addEventListener('click', mpNextYear);
+  $('#mpBtnCancel').addEventListener('click', closeMonthPicker);
+  $('#mpBtnToday').addEventListener('click', mpGoToday);
+  $('#monthPickerOverlay').addEventListener('click', function (e) {
+    if (e.target === this) closeMonthPicker();
   });
+
+  // Tab bar
+  $$('.tab-item').forEach(tab => {
+    tab.addEventListener('click', function () { switchTab(this.dataset.tab); });
+  });
+
+  // Account pill
+  $('#acctPill').addEventListener('click', showAccountSheet);
+
+  // Add page
+  $('#btnAddBack').addEventListener('click', () => { hideAllSuggests(); switchTab('calendar'); });
+  $('#photoUploadArea').addEventListener('click', choosePhoto);
+  $('#btnRemovePhoto').addEventListener('click', removePhoto);
+  $('#photoInput').addEventListener('change', onPhotoSelected);
+  $('#btnSubmit').addEventListener('click', submitRecord);
+
+  // Autocomplete — drink input
+  $('#addDrink').addEventListener('focus', () => {
+    const vals = getUniqueHistory('drinkName');
+    if (vals.length) renderSuggestDropdown('drinkSuggest', vals.slice(0, 8), (val) => {
+      $('#addDrink').value = val;
+      hideAllSuggests();
+    });
+    $('#drinkSuggest').classList.add('show');
+  });
+  $('#addDrink').addEventListener('input', () => filterSuggest('addDrink', 'drinkSuggest'));
+  $('#addDrink').addEventListener('blur', () => {
+    setTimeout(() => $('#drinkSuggest').classList.remove('show'), 200);
+  });
+
+  // Autocomplete — store input
+  $('#addStore').addEventListener('focus', () => {
+    const vals = getUniqueHistory('storeName');
+    if (vals.length) renderSuggestDropdown('storeSuggest', vals.slice(0, 8), (val) => {
+      $('#addStore').value = val;
+      hideAllSuggests();
+    });
+    $('#storeSuggest').classList.add('show');
+  });
+  $('#addStore').addEventListener('input', () => filterSuggest('addStore', 'storeSuggest'));
+  $('#addStore').addEventListener('blur', () => {
+    setTimeout(() => $('#storeSuggest').classList.remove('show'), 200);
+  });
+
+  // Stats
+  $('#btnStatsBack').addEventListener('click', () => switchTab('calendar'));
+  $('#chipSugar').addEventListener('click', () => pickFilter('sugar'));
+  $('#chipTemp').addEventListener('click', () => pickFilter('temp'));
+  $('#chipDrink').addEventListener('click', () => pickFilter('drink'));
+  $('#filterClearBtn').addEventListener('click', clearStatsFilter);
+
+  // Modal dismiss
+  $('#modalOverlay').addEventListener('click', function (e) {
+    if (e.target === this) this.classList.add('hidden');
+  });
+
+  // Global click to hide suggests
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.field')) hideAllSuggests();
+  });
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+function init() {
+  bindEvents();
+  const session = getSession();
+  const now = new Date();
+  currentYear  = now.getFullYear();
+  currentMonth = now.getMonth() + 1;
+  mpYear = currentYear;
+  $('#addDate').value = todayStr();
+  if (session) {
+    $('#acctName').textContent = session.accountName;
+    goToCalendar();
+  } else {
+    goToLogin();
+  }
+}
+
+init();
+
 })();
 </script>
 </body>
