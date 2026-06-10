@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>🧋 奶茶打卡</title>
+<style>
+  :root {
+    --primary: #c8a27a;
+    --primary-dark: #b0885e;
+    --primary-light: #f0e4d4;
+    --bg: #faf7f2;
+    --card-bg: #ffffff;
+    --text: #4a3728;
+    --text-secondary: #a0937d;
+    --text-muted: #c5b8a8;
+    --border: #efe8dc;
+    --danger: #d4786e;
+    --danger-light: #fdf0ee;
+    --shadow: 0 2px 12px rgba(74,55,40,.06);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-bottom: 120px;
+  }
+
+  /* ===== 页面容器 ===== */
+  .page { display: none; flex-direction: column; padding: 20px 16px; gap: 16px; }
+  .page.active { display: flex; }
+
+  /* ===== 顶部导航 ===== */
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    gap: 12px;
+  }
+  .nav-arrow {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; color: var(--primary); font-weight: 300;
+    border-radius: 50%; background: var(--card-bg); cursor: pointer;
+    box-shadow: var(--shadow); user-select: none;
+  }
+  .nav-arrow:active { background: var(--primary-light); }
+  .month-title { font-size: 18px; font-weight: 600; letter-spacing: 1px; }
+  .stats-link {
+    display: flex; align-items: center; gap: 4px;
+    padding: 10px 16px; background: var(--card-bg); border-radius: 30px;
+    cursor: pointer; font-size: 13px; color: var(--text-secondary);
+    box-shadow: var(--shadow); white-space: nowrap;
+  }
+  .stats-link:active { background: var(--primary-light); }
+
+  /* ===== 卡片 ===== */
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    overflow: hidden;
+  }
+  .section-title {
+    font-size: 16px; font-weight: 600; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::before {
+    content: ''; width: 4px; height: 18px;
+    background: var(--primary); border-radius: 2px;
+  }
+
+  /* ===== 日历 ===== */
+  .weekday-row { display: flex; margin-bottom: 4px; }
+  .weekday {
+    flex: 1; text-align: center; font-size: 12px;
+    color: var(--text-secondary); font-weight: 500; padding: 6px 0;
+  }
+  .day-grid { display: flex; flex-wrap: wrap; }
+  .day-cell {
+    width: calc(100% / 7); aspect-ratio: 1;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; padding: 4px 3px; position: relative;
+    border-radius: 8px; cursor: pointer; transition: .15s; font-size: 13px; gap: 2px;
+  }
+  .day-cell.muted { opacity: .25; pointer-events: none; }
+  .day-cell.today { background: var(--primary-light); font-weight: 700; }
+  .day-cell.selectable { border: 2px dashed var(--danger); }
+  .day-cell.selected { background: var(--danger-light); border-color: var(--danger); }
+  .day-photo {
+    width: 36px; height: 36px; border-radius: 6px; object-fit: cover;
+  }
+  .day-badge {
+    position: absolute; top: 2px; right: 2px;
+    background: var(--primary); color: #fff; font-size: 10px; border-radius: 50%;
+    min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+  }
+  .day-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+
+  /* ===== 本月数据 ===== */
+  .stats-row {
+    display: flex; align-items: center; justify-content: space-around; padding: 12px 0 10px;
+  }
+  .stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .stat-num { font-size: 32px; font-weight: 700; color: var(--primary); }
+  .stat-label { font-size: 12px; color: var(--text-secondary); }
+  .stat-divider { width: 1px; height: 40px; background: var(--border); }
+  .photo-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 8px 0; -webkit-overflow-scrolling: touch; }
+  .photo-scroll::-webkit-scrollbar { display: none; }
+  .thumb-img { width: 80px; height: 80px; border-radius: 8px; flex-shrink: 0; object-fit: cover; }
+  .empty-note { text-align: center; color: var(--text-muted); font-size: 13px; padding: 16px 0 4px; }
+
+  /* ===== 最爱 ===== */
+  .fav-row { display: flex; align-items: center; gap: 16px; }
+  .fav-photo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .fav-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; }
+  .fav-name { font-size: 17px; font-weight: 600; }
+  .fav-count { font-size: 13px; color: var(--text-secondary); margin-top: 2px; display: block; }
+
+  /* ===== 筛选提示 ===== */
+  .filter-tip {
+    display: flex; justify-content: space-between; margin-top: 10px;
+    padding: 8px 12px; background: var(--primary-light); border-radius: 8px;
+    font-size: 13px; color: var(--primary-dark);
+  }
+  .filter-clear { cursor: pointer; font-weight: 600; padding: 2px 8px; }
+
+  /* ===== 底部操作栏 ===== */
+  .bottom-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    display: flex; gap: 10px; padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--card-bg); box-shadow: 0 -2px 16px rgba(74,55,40,.06); z-index: 100;
+  }
+  .bbtn {
+    flex: 1; font-size: 14px; font-weight: 500; border-radius: 12px;
+    padding: 14px 6px; text-align: center; border: none; cursor: pointer;
+    transition: .15s; white-space: nowrap;
+  }
+  .bbtn-primary { background: var(--primary); color: #fff; }
+  .bbtn-primary:active { background: var(--primary-dark); }
+  .bbtn-outline { background: var(--card-bg); color: var(--text); border: 1.5px solid var(--border); }
+  .bbtn-outline:active { background: var(--bg); }
+  .bbtn-cancel { background: var(--bg); color: var(--text-secondary); flex: 1; }
+  .bbtn-danger { background: var(--danger); color: #fff; flex: 2; }
+  .delete-hint { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--danger); font-weight: 500; }
+
+  /* ===== Add 页面表单 ===== */
+  .add-header { display: flex; align-items: center; gap: 12px; }
+  .add-header .back-btn { font-size: 20px; padding: 8px; cursor: pointer; color: var(--text-secondary); }
+  .add-header h2 { font-size: 18px; font-weight: 600; }
+  .field { padding: 14px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+  .field:last-child { border-bottom: none; }
+  .field-label { font-size: 14px; font-weight: 500; }
+  .field input, .field select {
+    width: 100%; height: 44px; background: var(--bg); border: none;
+    border-radius: 8px; padding: 0 14px; font-size: 15px; color: var(--text);
+    outline: none; font-family: inherit;
+  }
+  .field input:focus { box-shadow: 0 0 0 2px rgba(200,162,122,.2); }
+  .field select { appearance: none; cursor: pointer; }
+  .photo-upload {
+    width: 100%; height: 160px; background: var(--bg);
+    border: 2px dashed var(--border); border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; cursor: pointer; transition: .15s;
+  }
+  .photo-upload:hover { border-color: var(--primary); }
+  .upload-icon { font-size: 36px; color: var(--primary); }
+  .upload-text { font-size: 13px; color: var(--text-secondary); }
+  .photo-preview-wrap { position: relative; border-radius: 12px; overflow: hidden; }
+  .photo-preview-wrap img { width: 100%; max-height: 280px; object-fit: cover; display: block; }
+  .photo-remove {
+    position: absolute; top: 8px; right: 8px;
+    width: 36px; height: 36px; background: rgba(0,0,0,.5); color: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px;
+  }
+  .submit-btn {
+    width: 100%; padding: 16px; background: var(--primary); color: #fff;
+    border: none; border-radius: 12px; font-size: 17px; font-weight: 600;
+    cursor: pointer; letter-spacing: 2px; transition: .15s;
+  }
+  .submit-btn:active { background: var(--primary-dark); }
+
+  /* ===== Stats 页面 ===== */
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .filter-chip {
+    padding: 10px 16px; background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 20px; font-size: 13px; cursor: pointer; color: var(--text-secondary);
+    box-shadow: var(--shadow);
+  }
+  .filter-chip.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); font-weight: 500; }
+  .filter-clear-btn { font-size: 13px; color: var(--danger); cursor: pointer; padding: 8px 12px; }
+  .pie-wrap { display: flex; justify-content: center; padding: 16px 0; }
+  .pie-wrap canvas { max-width: 100%; }
+  .store-row {
+    display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .store-row:last-child { border-bottom: none; }
+  .store-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .store-name { width: 120px; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+  .store-bar-wrap { flex: 1; height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; }
+  .store-bar { height: 100%; background: var(--primary); border-radius: 5px; transition: width .4s; }
+  .store-stat { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+
+  /* ===== 底部 Tab 切换 ===== */
+  .tab-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    display: flex; background: var(--card-bg);
+    box-shadow: 0 -2px 16px rgba(74,55,40,.06); z-index: 99;
+  }
+  .tab-item {
+    flex: 1; text-align: center; padding: 10px 0 6px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    cursor: pointer; font-size: 12px; color: var(--text-secondary);
+    transition: .15s;
+  }
+  .tab-item.active { color: var(--primary); font-weight: 600; }
+  .tab-item .tab-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+
+  /* bottom bar visibility when tab bar present */
+  .has-tabbar .bottom-bar { bottom: 56px; }
+
+  /* ===== 弹窗 ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-box {
+    background: var(--card-bg); border-radius: var(--radius);
+    padding: 24px 20px 20px; width: calc(100% - 48px); max-width: 340px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.15);
+  }
+  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 10px; text-align: center; }
+  .modal-body { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; text-align: center; line-height: 1.7; white-space: pre-line; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btn { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; border: none; font-family: inherit; transition: .15s; }
+  .modal-btn-cancel { background: var(--bg); color: var(--text-secondary); }
+  .modal-btn-cancel:active { background: var(--border); }
+  .modal-btn-confirm { background: var(--primary); color: #fff; }
+  .modal-btn-confirm:active { background: var(--primary-dark); }
+  .modal-btn-danger { background: var(--danger); color: #fff; }
+  .modal-btn-danger:active { opacity: .85; }
+
+  /* ===== Action Sheet ===== */
+  .sheet-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .sheet-overlay.hidden { display: none; }
+  .sheet-box {
+    width: 100%; max-width: 480px; background: var(--card-bg);
+    border-radius: 16px 16px 0 0; padding: 8px 0 0;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  .sheet-item {
+    padding: 16px; text-align: center; font-size: 16px;
+    border-bottom: 1px solid var(--border); cursor: pointer; transition: .15s;
+  }
+  .sheet-item:last-child { border-bottom: none; }
+  .sheet-item:active { background: var(--bg); }
+  .sheet-item.danger { color: var(--danger); font-weight: 600; }
+
+  /* ===== Toast ===== */
+  .toast {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    background: rgba(0,0,0,.78); color: #fff; padding: 12px 24px;
+    border-radius: 8px; font-size: 14px; z-index: 300; pointer-events: none;
+  }
+  .toast.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="app has-tabbar">
+  <!-- ========== 页面 1: 日历首页 ========== -->
+  <div class="page active" id="page-calendar">
+    <div class="nav-bar">
+      <div class="nav-arrow" onclick="prevMonth()">‹</div>
+      <div class="month-title" id="monthTitle">2026 年 6 月</div>
+      <div class="nav-arrow" onclick="nextMonth()">›</div>
+      <div class="stats-link" onclick="switchTab('stats')">📊 统计</div>
+    </div>
+
+    <div class="card">
+      <div class="weekday-row" id="weekdays"></div>
+      <div class="day-grid" id="dayGrid"></div>
+      <div class="filter-tip" id="filterTip" style="display:none">
+        <span id="filterTipText"></span>
+        <span class="filter-clear" onclick="clearFilter()">✕</span>
+      </div>
+    </div>
+
+    <div class="card" id="monthStatsCard">
+      <div class="section-title">本月数据</div>
+      <div class="stats-row">
+        <div class="stat-item"><span class="stat-num" id="totalCups">0</span><span class="stat-label">总杯数</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat-item"><span class="stat-num" id="totalStores">0</span><span class="stat-label">打卡门店</span></div>
+      </div>
+      <div class="photo-scroll" id="photoScroll"></div>
+      <div class="empty-note" id="emptyNote">本月暂无打卡记录</div>
+    </div>
+
+    <div class="card" id="favCard" style="display:none">
+      <div class="section-title">本月最爱</div>
+      <div class="fav-row">
+        <div id="favImg"></div>
+        <div><span class="fav-name" id="favName"></span><span class="fav-count" id="favCount"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 页面 2: 新增打卡 ========== -->
+  <div class="page" id="page-add">
+    <div class="add-header">
+      <span class="back-btn" onclick="switchTab('calendar')">←</span>
+      <h2>新增打卡</h2>
+    </div>
+    <div class="card">
+      <div class="field">
+        <span class="field-label">🧋 饮品名称</span>
+        <input id="addDrink" placeholder="如：珍珠奶茶、杨枝甘露…" maxlength="50">
+      </div>
+      <div class="field">
+        <span class="field-label">📍 门店名称</span>
+        <input id="addStore" placeholder="如：喜茶·国贸店" maxlength="50">
+      </div>
+      <div class="field">
+        <span class="field-label">🍬 糖分选择</span>
+        <select id="addSugar">
+          <option value="无糖">无糖</option>
+          <option value="少糖">少糖</option>
+          <option value="半糖" selected>半糖</option>
+          <option value="全糖">全糖</option>
+        </select>
+      </div>
+      <div class="field">
+        <span class="field-label">🌡 温度选择</span>
+        <select id="addTemp">
+          <option value="热">热</option>
+          <option value="常温" selected>常温</option>
+          <option value="去冰">去冰</option>
+          <option value="全冰">全冰</option>
+        </select>
+      </div>
+      <div class="field">
+        <span class="field-label">📅 打卡日期</span>
+        <input type="date" id="addDate">
+      </div>
+      <div class="field">
+        <span class="field-label">📸 奶茶实拍</span>
+        <div id="photoUploadArea" class="photo-upload" onclick="choosePhoto()">
+          <span class="upload-icon">＋</span>
+          <span class="upload-text">拍照或从相册选择</span>
+        </div>
+        <div id="photoPreviewArea" class="photo-preview-wrap" style="display:none">
+          <img id="photoPreviewImg" src="" alt="预览">
+          <span class="photo-remove" onclick="removePhoto()">✕</span>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="onPhotoSelected(event)">
+      </div>
+    </div>
+    <button class="submit-btn" onclick="submitRecord()">📝 保存打卡</button>
+  </div>
+
+  <!-- ========== 页面 3: 数据统计 ========== -->
+  <div class="page" id="page-stats">
+    <div class="add-header">
+      <span class="back-btn" onclick="switchTab('calendar')">←</span>
+      <h2>数据统计</h2>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-chip" id="chipSugar" onclick="pickFilter('sugar')">糖分 ▽</span>
+      <span class="filter-chip" id="chipTemp" onclick="pickFilter('temp')">温度 ▽</span>
+      <span class="filter-chip" id="chipDrink" onclick="pickFilter('drink')">饮品 ▽</span>
+      <span class="filter-clear-btn" id="filterClearBtn" style="display:none" onclick="clearStatsFilter()">清除</span>
+    </div>
+
+    <div class="card" id="statsChartCard" style="display:none">
+      <div class="section-title">门店占比</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;" id="statsTotal"></div>
+      <div class="pie-wrap"><canvas id="pieCanvas" width="300" height="300"></canvas></div>
+    </div>
+    <div class="card" id="statsEmptyCard">
+      <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:14px;">📊<br>暂无数据，快去打卡吧</div>
+    </div>
+
+    <div class="card" id="storeListCard" style="display:none">
+      <div class="section-title">门店明细</div>
+      <div id="storeList"></div>
+    </div>
+  </div>
+
+  <!-- ========== 底部 Tab 栏 ========== -->
+  <div class="tab-bar">
+    <div class="tab-item active" data-tab="calendar" onclick="switchTab('calendar')">
+      <span class="tab-icon">📅</span>打卡
+    </div>
+    <div class="tab-item" data-tab="add" onclick="switchTab('add')">
+      <span class="tab-icon">✚</span>新增
+    </div>
+    <div class="tab-item" data-tab="stats" onclick="switchTab('stats')">
+      <span class="tab-icon">📊</span>统计
+    </div>
+  </div>
+
+  <!-- ========== 底部操作栏（日历页专用） ========== -->
+  <div class="bottom-bar" id="bottomBar"></div>
+</div>
+
+<!-- ========== 弹窗 ========== -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
+
+<!-- ========== 底部选择面板 ========== -->
+<div class="sheet-overlay hidden" id="sheetOverlay">
+  <div class="sheet-box" id="sheetBox"></div>
+</div>
+
+<!-- ========== Toast ========== -->
+<div class="toast hidden" id="toast"></div>
+
+<script>
+// ====== 数据层 ======
+var STORAGE_KEY = 'tea_preview_data';
+function loadAll() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { return []; } }
+function saveAll(records) { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 9); }
+
+// ====== 全局状态 ======
+var currentYear, currentMonth;
+var deleteMode = false;
+var selectedIds = [];
+var tagFilter = null;
+var statsFilter = { sugar: '', temp: '', drink: '' };
+
+var WEEKDAYS = ['一','二','三','四','五','六','日'];
+var SUGARS = ['无糖','少糖','半糖','全糖'];
+var TEMPS = ['热','常温','去冰','全冰'];
+var PIE_COLORS = ['#F8B4C8','#B4E0D0','#FFDAB9','#C4D7F2','#F5D5E0','#B5EAD7','#FFE5B4','#D4C5F0','#FCCB8F','#A8D8EA','#F9CFD4','#C1E8D5','#FDE2C3','#D0D9F0','#FFC3A0','#B8D9F0','#F7C8E0','#C5ECD9','#FFD4A8','#C0D0EF'];
+
+// ====== UI 工具 ======
+var _toastTimer;
+function showToast(msg, ms) {
+  ms = ms || 1500;
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { t.classList.add('hidden'); }, ms);
+}
+
+function showModal(title, body, buttons) {
+  var ov = document.getElementById('modalOverlay');
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  var bc = document.getElementById('modalBtns'); bc.innerHTML = '';
+  buttons.forEach(function(b) {
+    var btn = document.createElement('button');
+    btn.textContent = b.text; btn.className = 'modal-btn ' + (b.cls || 'modal-btn-cancel');
+    btn.onclick = function() { ov.classList.add('hidden'); if (b.cb) b.cb(); };
+    bc.appendChild(btn);
+  });
+  ov.classList.remove('hidden');
+}
+
+function showActionSheet(items, cb) {
+  var ov = document.getElementById('sheetOverlay');
+  var box = document.getElementById('sheetBox'); box.innerHTML = '';
+  items.forEach(function(item, i) {
+    var d = document.createElement('div');
+    d.textContent = typeof item === 'string' ? item : (item.label || item);
+    d.className = 'sheet-item' + (item.danger ? ' danger' : '');
+    d.onclick = function() { ov.classList.add('hidden'); cb(i, typeof item === 'string' ? item : item.value || item.label); };
+    box.appendChild(d);
+  });
+  ov.onclick = function(e) { if (e.target === ov) { ov.classList.add('hidden'); cb(-1, null); } };
+  ov.classList.remove('hidden');
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ====== Tab 切换 ======
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
+  var pageMap = { calendar: 'page-calendar', add: 'page-add', stats: 'page-stats' };
+  document.getElementById(pageMap[tab]).classList.add('active');
+  document.querySelector('.tab-item[data-tab="' + tab + '"]').classList.add('active');
+  var bb = document.getElementById('bottomBar');
+  if (tab === 'calendar') {
+    bb.style.display = 'flex';
+    renderBBar();
+    renderCalendar();
+  } else if (tab === 'stats') {
+    bb.style.display = 'none';
+    renderStats();
+  } else {
+    bb.style.display = 'none';
+    document.getElementById('addDate').value = todayStr();
+  }
+}
+
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// ====== 日历渲染 ======
+function renderCalendar() {
+  var records = loadAll();
+  var visible = records;
+  if (tagFilter) visible = records.filter(function(r) { return r[tagFilter.type] === tagFilter.value; });
+
+  var monthStr = currentYear + '-' + String(currentMonth).padStart(2,'0');
+  var monthRecords = visible.filter(function(r) { return r.date && r.date.startsWith(monthStr); });
+
+  document.getElementById('monthTitle').textContent = currentYear + ' 年 ' + currentMonth + ' 月';
+  renderDayGrid(monthRecords, records);
+  renderMonthStats(monthRecords);
+  renderFavorite(monthRecords);
+
+  var tip = document.getElementById('filterTip');
+  if (tagFilter) {
+    tip.style.display = 'flex';
+    document.getElementById('filterTipText').textContent =
+      '🔍 筛选: ' + (tagFilter.type === 'sugar' ? '糖分' : '温度') + ' · ' + tagFilter.value;
+  } else { tip.style.display = 'none'; }
+}
+
+function renderDayGrid(monthRecords, allRecords) {
+  var grid = document.getElementById('dayGrid');
+  var weekRow = document.getElementById('weekdays');
+  weekRow.innerHTML = WEEKDAYS.map(function(d) { return '<div class="weekday">' + d + '</div>'; }).join('');
+
+  var jsMonth = currentMonth - 1;
+  var firstDay = new Date(currentYear, jsMonth, 1);
+  var rawDay = firstDay.getDay();
+  var startOffset = rawDay === 0 ? 6 : rawDay - 1;
+  var daysInMonth = new Date(currentYear, jsMonth + 1, 0).getDate();
+  var daysInPrevMonth = new Date(currentYear, jsMonth, 0).getDate();
+
+  var todayS = todayStr();
+  var map = {};
+  monthRecords.forEach(function(r) { if (!map[r.date]) map[r.date] = []; map[r.date].push(r); });
+
+  var selSet = new Set(selectedIds);
+
+  var html = '';
+  var prevJsMonth = jsMonth === 0 ? 11 : jsMonth - 1;
+  var prevYear = jsMonth === 0 ? currentYear - 1 : currentYear;
+  for (var i = startOffset - 1; i >= 0; i--) {
+    var d = daysInPrevMonth - i;
+    var ds = prevYear + '-' + String(prevJsMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    html += dayCellHtml(d, 'prev', ds, ds === todayS, map[ds] || [], selSet);
+  }
+  for (var d = 1; d <= daysInMonth; d++) {
+    var ds = currentYear + '-' + String(currentMonth).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    html += dayCellHtml(d, 'current', ds, ds === todayS, map[ds] || [], selSet);
+  }
+  var rendered = startOffset + daysInMonth;
+  var remaining = 42 - rendered;
+  var nextJsMonth = jsMonth === 11 ? 0 : jsMonth + 1;
+  var nextYear = jsMonth === 11 ? currentYear + 1 : currentYear;
+  for (var d = 1; d <= remaining; d++) {
+    var ds = nextYear + '-' + String(nextJsMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    html += dayCellHtml(d, 'next', ds, false, [], selSet);
+  }
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('.day-cell').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var date = this.dataset.date;
+      if (!date || this.classList.contains('muted')) return;
+      if (deleteMode) {
+        toggleDaySelection(date);
+      } else {
+        showDayDetail(date);
+      }
+    });
+  });
+}
+
+function dayCellHtml(day, month, dateStr, isToday, recs, selSet) {
+  var cls = ['day-cell'];
+  if (month !== 'current') cls.push('muted');
+  if (isToday) cls.push('today');
+  var hasRecs = recs.length > 0;
+  if (hasRecs && deleteMode) cls.push('selectable');
+  if (hasRecs && deleteMode && recs.every(function(r) { return selSet.has(r.id); })) cls.push('selected');
+
+  var inner = '<span>' + day + '</span>';
+  if (month === 'current' && hasRecs && recs[0].photo) {
+    inner += '<img class="day-photo" src="' + escHtml(recs[0].photo) + '" alt="">';
+  }
+  if (recs.length > 1) {
+    inner += '<span class="day-badge">' + recs.length + '</span>';
+  } else if (hasRecs && !recs[0].photo) {
+    inner += '<span class="day-dot"></span>';
+  }
+  return '<div class="' + cls.join(' ') + '" data-date="' + dateStr + '">' + inner + '</div>';
+}
+
+// ====== 当天记录详情 ======
+function showDayDetail(date) {
+  var records = loadAll().filter(function(r) { return r.date === date; });
+  if (!records.length) return;
+  var items = records.map(function(r) {
+    return (r.drinkName||'?') + ' @' + (r.storeName||'?') + ' [' + (r.sugar||'?') + '/' + (r.temperature||'?') + ']';
+  });
+  showModal(date, items.join('\n'), [{text: '知道了', cls: 'modal-btn-confirm'}]);
+}
+
+// ====== 删除模式：勾选日期 ======
+function toggleDaySelection(date) {
+  var records = loadAll().filter(function(r) { return r.date === date; });
+  if (!records.length) return;
+  var ids = records.map(function(r) { return r.id; });
+  var sel = selectedIds.slice();
+  var allSel = ids.every(function(id) { return sel.indexOf(id) !== -1; });
+  if (allSel) {
+    sel = sel.filter(function(id) { return ids.indexOf(id) === -1; });
+  } else {
+    ids.forEach(function(id) { if (sel.indexOf(id) === -1) sel.push(id); });
+  }
+  selectedIds = sel;
+  renderCalendar();
+}
+
+// ====== 本月统计 ======
+function renderMonthStats(monthRecords) {
+  document.getElementById('totalCups').textContent = monthRecords.length;
+  var stores = new Set(monthRecords.map(function(r) { return r.storeName; }).filter(Boolean));
+  document.getElementById('totalStores').textContent = stores.size;
+
+  var photos = monthRecords.filter(function(r) { return r.photo; }).map(function(r) { return r.photo; }).slice(0, 30);
+  var scroll = document.getElementById('photoScroll');
+  var empty = document.getElementById('emptyNote');
+  if (photos.length > 0) {
+    scroll.innerHTML = photos.map(function(p) { return '<img class="thumb-img" src="' + escHtml(p) + '" alt="">'; }).join('');
+    scroll.style.display = 'flex';
+    empty.style.display = 'none';
+  } else {
+    scroll.style.display = 'none';
+    empty.style.display = monthRecords.length === 0 ? 'block' : 'none';
+  }
+}
+
+// ====== 本月最爱 ======
+function renderFavorite(monthRecords) {
+  var card = document.getElementById('favCard');
+  if (!monthRecords.length) { card.style.display = 'none'; return; }
+  var freq = {};
+  monthRecords.forEach(function(r) { var n = r.drinkName || '未命名'; freq[n] = (freq[n]||0)+1; });
+  var best = '', bestN = 0;
+  Object.keys(freq).forEach(function(k) { if (freq[k] > bestN) { best = k; bestN = freq[k]; } });
+  var bp = monthRecords.filter(function(r) { return (r.drinkName||'未命名')===best && r.photo; })[0];
+  card.style.display = 'block';
+  document.getElementById('favName').textContent = best;
+  document.getElementById('favCount').textContent = '本月喝了 ' + bestN + ' 次';
+  var favImg = document.getElementById('favImg');
+  if (bp && bp.photo) {
+    favImg.innerHTML = '<img class="fav-photo" src="' + escHtml(bp.photo) + '" alt="">';
+  } else {
+    favImg.innerHTML = '<div class="fav-icon">🧋</div>';
+  }
+}
+
+// ====== 月份切换 ======
+function prevMonth() {
+  if (currentMonth===1) { currentYear--; currentMonth=12; }
+  else currentMonth--;
+  renderCalendar();
+}
+function nextMonth() {
+  if (currentMonth===12) { currentYear++; currentMonth=1; }
+  else currentMonth++;
+  renderCalendar();
+}
+
+// ====== 底部操作栏 ======
+function renderBBar() {
+  var bb = document.getElementById('bottomBar');
+  if (deleteMode) {
+    bb.innerHTML =
+      '<button class="bbtn bbtn-cancel" onclick="cancelDelete()">取消</button>' +
+      '<div class="delete-hint">已选 ' + selectedIds.length + ' 条</div>' +
+      '<button class="bbtn bbtn-danger" onclick="confirmDelete()">确认删除</button>';
+  } else {
+    bb.innerHTML =
+      '<button class="bbtn bbtn-outline" onclick="toggleDeleteMode()">🗑 删除记录</button>' +
+      '<button class="bbtn bbtn-outline" onclick="showTagFilter()">🏷 分类标签</button>' +
+      '<button class="bbtn bbtn-primary" onclick="switchTab(\'add\')">✚ 新增打卡</button>';
+  }
+}
+
+// ====== 删除模式 ======
+function toggleDeleteMode() {
+  if (deleteMode) { deleteMode = false; selectedIds = []; renderCalendar(); return; }
+  showModal('删除记录', '点击日历中有打卡的日期即可选中，确认后批量删除', [
+    {text: '取消', cls: 'modal-btn-cancel'},
+    {text: '进入删除模式', cls: 'modal-btn-danger', cb: function() {
+      deleteMode = true; selectedIds = []; tagFilter = null; renderCalendar();
+    }}
+  ]);
+}
+function confirmDelete() {
+  if (!selectedIds.length) { showToast('请先选择要删除的日期'); return; }
+  showModal('确认删除', '将删除 ' + selectedIds.length + ' 条打卡记录，不可恢复', [
+    {text: '取消', cls: 'modal-btn-cancel'},
+    {text: '确认删除', cls: 'modal-btn-danger', cb: function() {
+      var records = loadAll();
+      var idSet = new Set(selectedIds);
+      records = records.filter(function(r) { return !idSet.has(r.id); });
+      saveAll(records);
+      deleteMode = false; selectedIds = [];
+      renderCalendar();
+      showToast('已删除');
+    }}
+  ]);
+}
+function cancelDelete() { deleteMode = false; selectedIds = []; renderCalendar(); }
+
+// ====== 标签筛选 ======
+function showTagFilter() {
+  showActionSheet(['按糖分筛选', '按温度筛选', '清除筛选'], function(i) {
+    if (i === 0) {
+      showTagPicker('sugar', SUGARS);
+    } else if (i === 1) {
+      showTagPicker('temperature', TEMPS);
+    } else if (i === 2) {
+      tagFilter = null; renderCalendar(); showToast('已清除筛选');
+    }
+  });
+}
+function showTagPicker(type, options) {
+  showActionSheet(options, function(i, val) {
+    if (i >= 0) {
+      tagFilter = { type: type, value: val };
+      renderCalendar();
+      showToast('筛选: ' + (type==='sugar'?'糖分':'温度') + '·' + val);
+    }
+  });
+}
+function clearFilter() { tagFilter = null; renderCalendar(); }
+
+// ====== 新增打卡 ======
+function choosePhoto() { document.getElementById('photoInput').click(); }
+function onPhotoSelected(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('photoPreviewImg').src = ev.target.result;
+    document.getElementById('photoUploadArea').style.display = 'none';
+    document.getElementById('photoPreviewArea').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto() {
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoPreviewImg').src = '';
+  document.getElementById('photoUploadArea').style.display = 'flex';
+  document.getElementById('photoPreviewArea').style.display = 'none';
+}
+function submitRecord() {
+  var drink = document.getElementById('addDrink').value.trim();
+  var store = document.getElementById('addStore').value.trim();
+  if (!drink) { showToast('请输入饮品名称'); return; }
+  if (!store) { showToast('请输入门店名称'); return; }
+  var sugar = document.getElementById('addSugar').value;
+  var temp = document.getElementById('addTemp').value;
+  var date = document.getElementById('addDate').value || todayStr();
+  var photoSrc = document.getElementById('photoPreviewImg').src;
+
+  var record = {
+    id: genId(),
+    drinkName: drink,
+    storeName: store,
+    sugar: sugar, temperature: temp,
+    photo: photoSrc || '',
+    date: date,
+    timestamp: Date.now()
+  };
+  var records = loadAll();
+  records.unshift(record);
+  saveAll(records);
+
+  document.getElementById('addDrink').value = '';
+  document.getElementById('addStore').value = '';
+  document.getElementById('addSugar').value = '半糖';
+  document.getElementById('addTemp').value = '常温';
+  removePhoto();
+  showToast('打卡成功 🧋');
+  switchTab('calendar');
+}
+
+// ====== 数据统计 ======
+function renderStats() {
+  var records = loadAll();
+  if (statsFilter.sugar) records = records.filter(function(r) { return r.sugar === statsFilter.sugar; });
+  if (statsFilter.temp)  records = records.filter(function(r) { return r.temperature === statsFilter.temp; });
+  if (statsFilter.drink) records = records.filter(function(r) { return r.drinkName === statsFilter.drink; });
+
+  var cs = document.getElementById('chipSugar');
+  var ct = document.getElementById('chipTemp');
+  var cd = document.getElementById('chipDrink');
+  cs.classList.toggle('active', !!statsFilter.sugar);
+  cs.textContent = statsFilter.sugar || '糖分 ▽';
+  ct.classList.toggle('active', !!statsFilter.temp);
+  ct.textContent = statsFilter.temp || '温度 ▽';
+  cd.classList.toggle('active', !!statsFilter.drink);
+  cd.textContent = statsFilter.drink || '饮品 ▽';
+  document.getElementById('filterClearBtn').style.display = (statsFilter.sugar||statsFilter.temp||statsFilter.drink) ? 'inline' : 'none';
+
+  if (!records.length) {
+    document.getElementById('statsChartCard').style.display = 'none';
+    document.getElementById('storeListCard').style.display = 'none';
+    document.getElementById('statsEmptyCard').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('statsEmptyCard').style.display = 'none';
+  document.getElementById('statsChartCard').style.display = 'block';
+  document.getElementById('storeListCard').style.display = 'block';
+  document.getElementById('statsTotal').textContent = '共 ' + records.length + ' 杯';
+
+  var map = {};
+  records.forEach(function(r) { var k = r.storeName||'未知门店'; map[k] = (map[k]||0)+1; });
+  var total = records.length;
+  var storeStats = Object.keys(map).map(function(name, i) {
+    return {
+      name: name,
+      count: map[name],
+      percent: Math.round(map[name]/total*100),
+      color: PIE_COLORS[i % PIE_COLORS.length]
+    };
+  }).sort(function(a,b) { return b.count - a.count; });
+
+  drawPie(storeStats);
+  renderStoreList(storeStats);
+}
+
+function drawPie(storeStats) {
+  var canvas = document.getElementById('pieCanvas');
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  var cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 30;
+
+  var start = -Math.PI/2;
+  storeStats.forEach(function(item) {
+    var angle = (item.percent/100) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, start + angle);
+    ctx.closePath();
+    ctx.fillStyle = item.color;
+    ctx.fill();
+
+    if (item.percent >= 5) {
+      var mid = start + angle/2;
+      var lx = cx + Math.cos(mid) * (r + 20);
+      var ly = cy + Math.sin(mid) * (r + 20);
+      ctx.fillStyle = '#4a3728';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = lx > cx ? 'left' : 'right';
+      ctx.textBaseline = 'middle';
+      var label = item.name.length > 6 ? item.name.slice(0,5)+'…' : item.name;
+      label += ' ' + item.percent + '%';
+      ctx.fillText(label, lx, ly);
+    }
+    start += angle;
+  });
+}
+
+function renderStoreList(storeStats) {
+  document.getElementById('storeList').innerHTML = storeStats.map(function(s) {
+    return '<div class="store-row" onclick="showStoreDetail(\'' + escHtml(s.name).replace(/'/g,"\\'") + '\')">' +
+      '<span class="store-dot" style="background:' + s.color + '"></span>' +
+      '<span class="store-name">' + escHtml(s.name) + '</span>' +
+      '<div class="store-bar-wrap"><div class="store-bar" style="width:' + s.percent + '%"></div></div>' +
+      '<span class="store-stat">' + s.count + '杯 ' + s.percent + '%</span>' +
+    '</div>';
+  }).join('');
+}
+
+function showStoreDetail(name) {
+  var records = loadAll().filter(function(r) { return (r.storeName||'未知门店') === name; });
+  var drinks = [];
+  records.forEach(function(r) { if (r.drinkName && drinks.indexOf(r.drinkName)===-1) drinks.push(r.drinkName); });
+  showModal(name, '共 ' + records.length + ' 杯\n饮品: ' + (drinks.join('、') || '无'), [{text: '好的', cls: 'modal-btn-confirm'}]);
+}
+
+function pickFilter(type) {
+  var allRecords = loadAll();
+  var options;
+  if (type === 'sugar') {
+    options = []; allRecords.forEach(function(r) { if (r.sugar && options.indexOf(r.sugar)===-1) options.push(r.sugar); });
+  } else if (type === 'temp') {
+    options = []; allRecords.forEach(function(r) { if (r.temperature && options.indexOf(r.temperature)===-1) options.push(r.temperature); });
+  } else {
+    options = []; allRecords.forEach(function(r) { if (r.drinkName && options.indexOf(r.drinkName)===-1) options.push(r.drinkName); });
+  }
+  if (!options.length) { showToast('暂无数据'); return; }
+  var items = ['全部'].concat(options);
+  showActionSheet(items, function(i, val) {
+    if (i < 0) return;
+    var v = i === 0 ? '' : val;
+    if (type === 'sugar') statsFilter.sugar = v;
+    else if (type === 'temp') statsFilter.temp = v;
+    else statsFilter.drink = v;
+    renderStats();
+  });
+}
+function clearStatsFilter() { statsFilter = { sugar:'', temp:'', drink:'' }; renderStats(); }
+
+// ====== 初始化 ======
+(function init() {
+  var now = new Date();
+  currentYear = now.getFullYear();
+  currentMonth = now.getMonth() + 1;
+  document.getElementById('addDate').value = todayStr();
+
+  renderBBar();
+  renderCalendar();
+})();
+</script>
+</body>
+</html>
