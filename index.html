@@ -291,12 +291,87 @@
     border-radius: 8px; font-size: 14px; z-index: 300; pointer-events: none;
   }
   .toast.hidden { display: none; }
+
+  /* ===== 账号：登录页 ===== */
+  .login-brand {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 56px 0 36px; gap: 6px;
+  }
+  .login-logo { font-size: 64px; }
+  .login-title { font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: 2px; }
+  .login-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .login-card { padding: 24px 20px; }
+  .login-card .field { border-bottom: none; }
+  .login-input {
+    width: 100%; height: 48px; background: var(--bg); border: none;
+    border-radius: 10px; padding: 0 16px; font-size: 16px; color: var(--text);
+    outline: none; font-family: inherit; text-align: center;
+  }
+  .login-input:focus { box-shadow: 0 0 0 2px rgba(200,162,122,.25); }
+  .login-input::placeholder { color: var(--text-muted); }
+  .login-error {
+    text-align: center; font-size: 13px; color: var(--danger);
+    min-height: 20px; margin-top: 8px; transition: .2s;
+  }
+  .login-btns { display: flex; gap: 10px; margin-top: 8px; }
+  .login-btn {
+    flex: 1; padding: 14px 0; border-radius: 12px; font-size: 15px;
+    font-weight: 600; cursor: pointer; text-align: center; border: none;
+    font-family: inherit; transition: .15s;
+  }
+  .login-btn-login { background: var(--primary); color: #fff; }
+  .login-btn-login:active { background: var(--primary-dark); }
+  .login-btn-register { background: var(--card-bg); color: var(--primary); border: 1.5px solid var(--primary); }
+  .login-btn-register:active { background: var(--primary-light); }
+  .login-tip {
+    text-align: center; font-size: 12px; color: var(--text-muted);
+    margin-top: 18px; line-height: 1.6;
+  }
+
+  /* ===== 账号：入口按钮（日历页顶栏） ===== */
+  .acct-entry {
+    display: flex; align-items: center; justify-content: flex-end; padding: 0 0 2px;
+  }
+  .acct-pill {
+    display: flex; align-items: center; gap: 4px;
+    padding: 6px 14px; background: var(--card-bg); border-radius: 20px;
+    cursor: pointer; font-size: 12px; color: var(--text-secondary);
+    box-shadow: var(--shadow); user-select: none;
+  }
+  .acct-pill:active { background: var(--primary-light); }
+  .acct-pill .acct-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
 </style>
 </head>
 <body>
 <div class="app has-tabbar">
+  <!-- ========== 页面 0: 登录 / 注册 ========== -->
+  <div class="page active" id="page-login">
+    <div class="login-brand">
+      <div class="login-logo">🧋</div>
+      <div class="login-title">奶茶打卡</div>
+      <div class="login-subtitle">记录每一杯快乐</div>
+    </div>
+    <div class="card login-card">
+      <div class="field">
+        <span class="field-label">👤 账号名称</span>
+        <input class="login-input" id="loginAccount" placeholder="请输入账号名称" maxlength="30" autocomplete="off">
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <div class="login-btns">
+        <button class="login-btn login-btn-login" onclick="doLogin()">登 录</button>
+        <button class="login-btn login-btn-register" onclick="doRegister()">注册新账号</button>
+      </div>
+    </div>
+    <div class="login-tip">💡 新用户请点击「注册新账号」<br>已有账号请直接「登录」</div>
+  </div>
+
   <!-- ========== 页面 1: 日历首页 ========== -->
-  <div class="page active" id="page-calendar">
+  <div class="page" id="page-calendar">
+    <div class="acct-entry">
+      <div class="acct-pill" onclick="showAccountSheet()">
+        <span class="acct-dot"></span><span id="acctName">--</span>
+      </div>
+    </div>
     <div class="nav-bar">
       <div class="nav-arrow" onclick="prevMonth()">‹</div>
       <div class="month-title" id="monthTitle">2026 年 6 月</div>
@@ -415,7 +490,7 @@
   </div>
 
   <!-- ========== 底部 Tab 栏 ========== -->
-  <div class="tab-bar">
+  <div class="tab-bar" id="tabBar">
     <div class="tab-item active" data-tab="calendar" onclick="switchTab('calendar')">
       <span class="tab-icon">📅</span>打卡
     </div>
@@ -449,13 +524,161 @@
 <div class="toast hidden" id="toast"></div>
 
 <script>
-// ====== 数据层 ======
-var STORAGE_KEY = 'tea_preview_data';
-function loadAll() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { return []; } }
-function saveAll(records) { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
-function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 9); }
+// ==================== 账号数据层 ====================
+var ACCOUNTS_KEY = 'tea_accounts';
+var SESSION_KEY  = 'tea_session';
+var OLD_DATA_KEY = 'tea_preview_data';
 
-// ====== 全局状态 ======
+function getAccounts() {
+  try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY)) || []; } catch(e) { return []; }
+}
+function saveAccounts(accs) {
+  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accs));
+}
+function getSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; } catch(e) { return null; }
+}
+function saveSession(s) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+}
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+function getStorageKey(accountId) {
+  return 'tea_records_' + accountId;
+}
+
+// ====== 打卡数据（隔离到当前账号） ======
+function loadAll() {
+  var session = getSession();
+  if (!session) return [];
+  try { return JSON.parse(localStorage.getItem(getStorageKey(session.accountId))) || []; } catch(e) { return []; }
+}
+function saveAll(records) {
+  var session = getSession();
+  if (!session) return;
+  localStorage.setItem(getStorageKey(session.accountId), JSON.stringify(records));
+}
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+}
+
+// ====== 旧数据迁移 ======
+function tryMigrateOldData(accountId) {
+  try {
+    var old = localStorage.getItem(OLD_DATA_KEY);
+    if (old) {
+      var oldRecords = JSON.parse(old);
+      if (oldRecords && oldRecords.length > 0) {
+        var key = getStorageKey(accountId);
+        var existing = JSON.parse(localStorage.getItem(key) || '[]');
+        var existingIds = {};
+        existing.forEach(function(r) { existingIds[r.id] = true; });
+        oldRecords.forEach(function(r) {
+          if (!existingIds[r.id]) { existing.push(r); existingIds[r.id] = true; }
+        });
+        localStorage.setItem(key, JSON.stringify(existing));
+      }
+      localStorage.removeItem(OLD_DATA_KEY);
+      return oldRecords.length;
+    }
+  } catch(e) {}
+  return 0;
+}
+
+// ==================== 登录 / 注册 ====================
+function doLogin() {
+  var name = document.getElementById('loginAccount').value.trim();
+  if (!name) { showLoginError('请输入账号名称'); return; }
+
+  var accounts = getAccounts();
+  var found = null;
+  for (var i = 0; i < accounts.length; i++) {
+    if (accounts[i].name === name) { found = accounts[i]; break; }
+  }
+  if (!found) { showLoginError('账号不存在，请先注册'); return; }
+
+  performLogin(found);
+}
+
+function doRegister() {
+  var name = document.getElementById('loginAccount').value.trim();
+  if (!name) { showLoginError('请输入账号名称'); return; }
+
+  var accounts = getAccounts();
+  for (var i = 0; i < accounts.length; i++) {
+    if (accounts[i].name === name) { showLoginError('该账号已存在，请直接登录'); return; }
+  }
+
+  var newAccount = {
+    id: 'acc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    name: name,
+    createdAt: Date.now()
+  };
+  accounts.push(newAccount);
+  saveAccounts(accounts);
+
+  var migrated = tryMigrateOldData(newAccount.id);
+  performLogin(newAccount);
+  if (migrated > 0) {
+    setTimeout(function() { showToast('已导入 ' + migrated + ' 条历史记录'); }, 500);
+  }
+}
+
+function performLogin(account) {
+  saveSession({ accountId: account.id, accountName: account.name });
+  clearLoginError();
+  document.getElementById('loginAccount').value = '';
+  document.getElementById('acctName').textContent = account.name;
+  goToCalendar();
+}
+
+function doLogout() {
+  clearSession();
+  deleteMode = false; selectedIds = []; tagFilter = null;
+  statsFilter = { sugar: '', temp: '', drink: '' };
+  showLoginPage();
+}
+
+function showAccountSheet() {
+  var session = getSession();
+  var accountName = session ? session.accountName : '未知';
+  showActionSheet([
+    '👤 当前账号：' + accountName,
+    '切换账号',
+    { label: '退出登录', danger: true }
+  ], function(i) {
+    if (i === 1) { doLogout(); }
+    else if (i === 2) { doLogout(); }
+  });
+}
+
+function showLoginError(msg) {
+  var el = document.getElementById('loginError');
+  el.textContent = msg;
+}
+function clearLoginError() {
+  document.getElementById('loginError').textContent = '';
+}
+
+function goToCalendar() {
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById('tabBar').style.display = 'flex';
+  var now = new Date();
+  currentYear = now.getFullYear();
+  currentMonth = now.getMonth() + 1;
+  document.getElementById('addDate').value = todayStr();
+  switchTab('calendar');
+}
+
+function showLoginPage() {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('page-login').classList.add('active');
+  document.getElementById('tabBar').style.display = 'none';
+  document.getElementById('bottomBar').style.display = 'none';
+}
+
+// ==================== 全局状态 ====================
 var currentYear, currentMonth;
 var deleteMode = false;
 var selectedIds = [];
@@ -505,10 +728,10 @@ function showActionSheet(items, cb) {
   ov.classList.remove('hidden');
 }
 
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
 // ====== Tab 切换 ======
 function switchTab(tab) {
+  // 未登录不允许操作
+  if (!getSession()) return;
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
   var pageMap = { calendar: 'page-calendar', add: 'page-add', stats: 'page-stats' };
@@ -627,6 +850,8 @@ function dayCellHtml(day, month, dateStr, isToday, recs, selSet) {
   }
   return '<div class="' + cls.join(' ') + '" data-date="' + dateStr + '">' + inner + '</div>';
 }
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ====== 当天记录详情 ======
 function showDayDetail(date) {
@@ -791,6 +1016,7 @@ function removePhoto() {
   document.getElementById('photoPreviewArea').style.display = 'none';
 }
 function submitRecord() {
+  if (!getSession()) { showToast('请先登录'); return; }
   var drink = document.getElementById('addDrink').value.trim();
   var store = document.getElementById('addStore').value.trim();
   if (!drink) { showToast('请输入饮品名称'); return; }
@@ -944,13 +1170,32 @@ function clearStatsFilter() { statsFilter = { sugar:'', temp:'', drink:'' }; ren
 
 // ====== 初始化 ======
 (function init() {
-  var now = new Date();
-  currentYear = now.getFullYear();
-  currentMonth = now.getMonth() + 1;
-  document.getElementById('addDate').value = todayStr();
+  // 恢复登录态
+  var session = getSession();
+  if (session) {
+    document.getElementById('acctName').textContent = session.accountName;
+    document.getElementById('page-login').classList.remove('active');
+    document.getElementById('tabBar').style.display = 'flex';
+    var now = new Date();
+    currentYear = now.getFullYear();
+    currentMonth = now.getMonth() + 1;
+    document.getElementById('addDate').value = todayStr();
+    renderBBar();
+    renderCalendar();
+  } else {
+    // 显示登录页
+    document.getElementById('tabBar').style.display = 'none';
+    document.getElementById('bottomBar').style.display = 'none';
+    var now2 = new Date();
+    currentYear = now2.getFullYear();
+    currentMonth = now2.getMonth() + 1;
+    document.getElementById('addDate').value = todayStr();
+  }
 
-  renderBBar();
-  renderCalendar();
+  // 登录页回车登录
+  document.getElementById('loginAccount').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
 })();
 </script>
 </body>
