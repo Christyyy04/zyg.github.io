@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>🧋 奶茶打卡</title>
+<title>🧋 小甜水</title>
 <style>
 /* ============================================================
    CSS Variables & Reset — Macaron Color Scheme
@@ -525,13 +525,17 @@ body {
   <div class="page active" id="page-login">
     <div class="login-brand">
       <div class="login-logo">🧋</div>
-      <div class="login-title">奶茶打卡</div>
-      <div class="login-subtitle">记录每一杯快乐</div>
+      <div class="login-title">小甜水</div>
+      <div class="login-subtitle">记录每一杯快乐 🧋</div>
     </div>
     <div class="card login-card">
       <div class="field">
         <span class="field-label">👤 账号名称</span>
         <input class="login-input" id="loginAccount" placeholder="请输入账号名称" maxlength="30" autocomplete="off">
+      </div>
+      <div class="field">
+        <span class="field-label">🔒 密码</span>
+        <input class="login-input" id="loginPassword" type="password" placeholder="请输入密码" maxlength="50" autocomplete="off">
       </div>
       <div class="login-error" id="loginError"></div>
       <div class="login-btns">
@@ -539,7 +543,7 @@ body {
         <button class="login-btn login-btn-outline" id="btnRegister">注册新账号</button>
       </div>
     </div>
-    <div class="login-tip">💡 新用户请点击「注册新账号」<br>已有账号请直接「登录」<br><br>📦 数据均保存在浏览器本地</div>
+    <div class="login-tip">💡 新用户请直接输入账号和密码，点击「注册新账号」<br>已有账号请输入正确密码后「登录」<br><br>📦 数据均保存在浏览器本地</div>
   </div>
 
   <!-- ============================================================
@@ -816,6 +820,17 @@ function getStorageKey(accountId) {
 }
 
 // ============================================================
+// PASSWORD HASHING — SHA-256 via Web Crypto
+// ============================================================
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode('xiaotianshui_salt_v1_' + password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ============================================================
 // DATA LAYER — Records
 // ============================================================
 function loadAll() {
@@ -952,7 +967,14 @@ function showModal(title, body, buttons) {
     const btn = document.createElement('button');
     btn.textContent = b.text;
     btn.className = 'modal-btn ' + (b.cls || 'modal-btn-cancel');
-    btn.addEventListener('click', () => { ov.classList.add('hidden'); if (b.cb) b.cb(); });
+    btn.addEventListener('click', async () => {
+      if (b.cb) {
+        const result = await b.cb();
+        // If callback returns false explicitly, keep modal open (validation failed)
+        if (result === false) return;
+      }
+      ov.classList.add('hidden');
+    });
     bc.appendChild(btn);
   });
   ov.classList.remove('hidden');
@@ -1096,29 +1118,68 @@ function mpGoToday() {
 }
 
 // ============================================================
-// AUTH — Login / Register
+// AUTH — Login / Register (with password)
 // ============================================================
-function doLogin() {
+async function doLogin() {
   const name = $('#loginAccount').value.trim();
+  const pwd  = $('#loginPassword').value;
+
   if (!name) { showLoginError('请输入账号名称'); return; }
+  if (!pwd)  { showLoginError('请输入密码'); return; }
+
   const accounts = getAccounts();
   const found = accounts.find(a => a.name === name);
-  if (!found) { showLoginError('账号不存在，请先注册'); return; }
+
+  // Username doesn't exist
+  if (!found) { showLoginError('该账号未注册，请先注册'); return; }
+
+  // Verify password — old accounts without password default to 123456
+  const hashed = await hashPassword(pwd);
+  const defaultHashed = await hashPassword('123456');
+  if (!found.password) {
+    // Legacy account: no password set, default is 123456
+    if (hashed !== defaultHashed) {
+      showLoginError('密码错误，请重新输入');
+      return;
+    }
+    // Auto-upgrade: store the hashed default password
+    found.password = defaultHashed;
+    saveAccounts(accounts);
+  } else if (hashed !== found.password) {
+    showLoginError('密码错误，请重新输入');
+    return;
+  }
+
   performLogin(found);
 }
 
-function doRegister() {
+async function doRegister() {
   const name = $('#loginAccount').value.trim();
+  const pwd  = $('#loginPassword').value;
+
   if (!name) { showLoginError('请输入账号名称'); return; }
+  if (!pwd)  { showLoginError('请设置密码'); return; }
+  if (pwd.length < 3) { showLoginError('密码长度不能少于3位'); return; }
+
   const accounts = getAccounts();
-  if (accounts.some(a => a.name === name)) { showLoginError('该账号已存在，请直接登录'); return; }
+
+  // Uniqueness check
+  if (accounts.some(a => a.name === name)) {
+    showLoginError('用户名已被占用，请换一个');
+    return;
+  }
+
+  // Hash password and store
+  const hashed = await hashPassword(pwd);
   const newAccount = {
     id: 'acc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
     name: name,
+    password: hashed,
     createdAt: Date.now()
   };
   accounts.push(newAccount);
   saveAccounts(accounts);
+
   const migrated = tryMigrateOldData(newAccount.id);
   performLogin(newAccount);
   if (migrated > 0) {
@@ -1130,6 +1191,7 @@ function performLogin(account) {
   saveSession({ accountId: account.id, accountName: account.name });
   clearLoginError();
   $('#loginAccount').value = '';
+  $('#loginPassword').value = '';
   $('#acctName').textContent = account.name;
   goToCalendar();
 }
@@ -1173,14 +1235,132 @@ function showAccountSheet() {
   const accountName = session ? session.accountName : '未知';
   showActionSheet([
     `👤 当前账号：${accountName}`,
+    { label: '🔑 修改密码', value: 'chpwd' },
     { label: '💾 导出数据备份', value: 'export' },
     { label: '📥 导入数据恢复', value: 'import' },
-    { label: '退出登录', danger: true }
+    { label: '🚪 退出登录', value: 'logout' },
+    { label: '⚠️ 注销账号', danger: true, value: 'delete' }
   ], (i, val) => {
     if (val === 'export') exportData();
     else if (val === 'import') importData();
-    else if (i === 3) doLogout();
+    else if (val === 'chpwd') showChangePassword();
+    else if (val === 'logout') doLogout();
+    else if (val === 'delete') confirmDeleteAccount();
   });
+}
+
+// ============================================================
+// CHANGE PASSWORD
+// ============================================================
+function showChangePassword() {
+  const html = `
+    <div style="text-align:left;display:flex;flex-direction:column;gap:10px;">
+      <div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">原密码</div>
+        <input id="chpwdOld" type="password" placeholder="请输入原密码" style="width:100%;height:42px;background:var(--bg);border:none;border-radius:8px;padding:0 12px;font-size:14px;outline:none;font-family:inherit;">
+      </div>
+      <div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">新密码</div>
+        <input id="chpwdNew" type="password" placeholder="请输入新密码（至少3位）" style="width:100%;height:42px;background:var(--bg);border:none;border-radius:8px;padding:0 12px;font-size:14px;outline:none;font-family:inherit;">
+      </div>
+      <div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">确认新密码</div>
+        <input id="chpwdConfirm" type="password" placeholder="请再次输入新密码" style="width:100%;height:42px;background:var(--bg);border:none;border-radius:8px;padding:0 12px;font-size:14px;outline:none;font-family:inherit;">
+      </div>
+      <div id="chpwdError" style="font-size:13px;color:var(--danger);min-height:20px;text-align:center;"></div>
+    </div>`;
+
+  showModal('修改密码', html, [
+    { text: '取消', cls: 'modal-btn-cancel' },
+    { text: '确认修改', cls: 'modal-btn-confirm', cb: async () => {
+      const oldPwd = document.getElementById('chpwdOld').value;
+      const newPwd = document.getElementById('chpwdNew').value;
+      const confirmPwd = document.getElementById('chpwdConfirm').value;
+      const errEl = document.getElementById('chpwdError');
+
+      if (!oldPwd) { errEl.textContent = '请输入原密码'; return false; }
+      if (!newPwd) { errEl.textContent = '请输入新密码'; return false; }
+      if (newPwd.length < 3) { errEl.textContent = '新密码长度不能少于3位'; return false; }
+      if (newPwd !== confirmPwd) { errEl.textContent = '两次输入的新密码不一致'; return false; }
+
+      const session = getSession();
+      const accounts = getAccounts();
+      const account = accounts.find(a => a.id === session.accountId);
+      if (!account) { showToast('账号数据异常'); return; }
+
+      // Verify old password
+      const oldHashed = await hashPassword(oldPwd);
+      if (oldHashed !== account.password) {
+        errEl.textContent = '原密码错误';
+        return false;
+      }
+
+      // Same as old?
+      if (oldPwd === newPwd) {
+        errEl.textContent = '新密码不能与原密码相同';
+        return false;
+      }
+
+      // Update password
+      account.password = await hashPassword(newPwd);
+      saveAccounts(accounts);
+      showToast('✅ 密码修改成功');
+    }}
+  ]);
+}
+
+// ============================================================
+// DELETE ACCOUNT
+// ============================================================
+function confirmDeleteAccount() {
+  const session = getSession();
+  if (!session) return;
+
+  const html = `
+    <div style="text-align:left;display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:14px;color:var(--danger);text-align:center;line-height:1.6;">
+        ⚠️ 此操作将<strong>永久删除</strong>账号「${escHtml(session.accountName)}」及其<strong>所有打卡数据</strong>，不可恢复！
+      </div>
+      <div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">请输入密码确认</div>
+        <input id="delPwd" type="password" placeholder="输入密码以确认注销" style="width:100%;height:42px;background:var(--bg);border:none;border-radius:8px;padding:0 12px;font-size:14px;outline:none;font-family:inherit;">
+      </div>
+      <div id="delError" style="font-size:13px;color:var(--danger);min-height:20px;text-align:center;"></div>
+    </div>`;
+
+  showModal('注销账号', html, [
+    { text: '取消', cls: 'modal-btn-cancel' },
+    { text: '确认注销', cls: 'modal-btn-danger', cb: async () => {
+      const pwd = document.getElementById('delPwd').value;
+      const errEl = document.getElementById('delError');
+
+      if (!pwd) { errEl.textContent = '请输入密码确认'; return false; }
+
+      const accounts = getAccounts();
+      const account = accounts.find(a => a.id === session.accountId);
+      if (!account) { showToast('账号数据异常'); return; }
+
+      const hashed = await hashPassword(pwd);
+      if (hashed !== account.password) {
+        errEl.textContent = '密码错误';
+        return false;
+      }
+
+      // Delete account data
+      localStorage.removeItem(getStorageKey(session.accountId));
+      // Remove account from list (frees up username)
+      const updated = accounts.filter(a => a.id !== session.accountId);
+      saveAccounts(updated);
+      // Clear session
+      clearSession();
+      deleteMode = false;
+      selectedIds = [];
+      tagFilter = null;
+      statsFilter = { sugar: '', temp: '', drink: '' };
+      goToLogin();
+      showToast('账号已注销，数据已清空');
+    }}
+  ]);
 }
 
 // ============================================================
@@ -1199,7 +1379,7 @@ function exportData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `tea-records-backup-${todayStr()}.json`;
+  a.download = `xiaotianshui-backup-${todayStr()}.json`;
   a.click();
   URL.revokeObjectURL(url);
   showToast('✅ 数据已导出');
@@ -1780,7 +1960,8 @@ function bindEvents() {
   // Login
   $('#btnLogin').addEventListener('click', doLogin);
   $('#btnRegister').addEventListener('click', doRegister);
-  $('#loginAccount').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+  $('#loginAccount').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#loginPassword').focus(); });
+  $('#loginPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
 
   // Calendar navigation
   $('#btnPrevMonth').addEventListener('click', prevMonth);
